@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signal-Weighted ICP Scoring — Methodology Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  :root{
+    --ink:#152528; --sub:#4A5A5D; --faint:#6B7A7D; --ghost:#8A9598;
+    --bg:#F4F7F7; --panel:#fff; --line:#DCE4E4; --hair:#EAEFEF;
+    --teal:#0E6E63;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:'Sora',ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+  .wrap{max-width:1140px;margin:0 auto;padding:32px 16px}
+  .head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--teal)}
+  h1{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
+  .lede{font-size:14px;color:var(--sub);margin-top:8px;max-width:660px;line-height:1.55}
+  .btn-reset{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #CBD6D6;background:#fff;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .btn-reset:hover{background:#F4F7F7}
+  .grid{display:grid;grid-template-columns:2fr 3fr;gap:20px;margin-top:24px}
+  @media(max-width:940px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .card h2{font-size:15px;font-weight:600}
+  .hint{font-size:12px;color:var(--faint);margin:4px 0 16px;line-height:1.5}
+  .seg-toggle{display:flex;border:1px solid #CBD6D6;border-radius:8px;overflow:hidden}
+  .seg-toggle button{font-family:inherit;font-size:12px;font-weight:600;padding:5px 12px;border:0;background:#fff;color:var(--sub);cursor:pointer}
+  .seg-toggle button.on{background:var(--ink);color:#fff}
+  .row-between{display:flex;align-items:center;justify-content:space-between}
+  .alloc{height:32px;border-radius:6px;overflow:hidden;display:flex;margin-bottom:4px}
+  .alloc div{display:flex;align-items:center;justify-content:center;transition:width .2s ease}
+  .alloc span{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:#fff}
+  .alloc-note{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .alloc-note .lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint)}
+  .warn{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:2px 8px;border-radius:4px;background:#FBF1DE;color:#8A5F12;display:none}
+  .sig-class{margin-bottom:14px;border-top:1px solid var(--hair);padding-top:12px}
+  .sig-class-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .sig-class-name{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;color:var(--sub)}
+  .sig-class-q{font-size:11px;color:var(--ghost);font-style:italic}
+  .sig-class-pts{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint)}
+  .factor{margin-bottom:12px}
+  .factor label{font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .swatch{display:inline-block;width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .factor .val{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600}
+  .factor input[type=range]{width:100%;accent-color:var(--teal);margin:3px 0 2px}
+  .factor .desc{font-size:11px;color:var(--faint);line-height:1.45}
+  .gate-row{display:flex;align-items:flex-start;gap:10px;background:#F8F4EC;border:1px solid #EAD9B8;border-radius:8px;padding:10px 12px;margin-top:4px}
+  .gate-row input{margin-top:3px;accent-color:#8A5F12}
+  .gate-row .g-title{font-size:12.5px;font-weight:600}
+  .gate-row .g-desc{font-size:11px;color:#6B5A35;line-height:1.45}
+  .tier-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+  .tier-name{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+  .tier-note{font-size:11px;color:var(--ghost)}
+  .tier-bin{display:flex;flex-wrap:wrap;gap:6px;min-height:34px;background:var(--bg);border-radius:8px;padding:6px;margin-bottom:12px}
+  .chip{font-family:inherit;font-size:12px;font-weight:500;padding:4px 10px;border-radius:6px;border:1px solid #CBD6D6;background:#fff;cursor:pointer;color:var(--ink)}
+  .chip:hover{opacity:.75}
+  .tbl-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--hair);flex-wrap:wrap;gap:8px}
+  .tbl-head h2{font-size:15px;font-weight:600}
+  .count{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:400;color:var(--ghost)}
+  .filters button{font-family:inherit;font-size:12px;font-weight:500;padding:4px 10px;border-radius:6px;border:0;background:transparent;color:var(--sub);cursor:pointer}
+  .filters button.on{background:var(--ink);color:#fff}
+  .acct{border-bottom:1px solid var(--hair)}
+  .acct:last-child{border-bottom:0}
+  .acct-row{width:100%;text-align:left;background:none;border:0;padding:12px 20px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:12px}
+  .acct-row:hover{background:#F8FAFA}
+  .score{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;width:38px;text-align:right}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;min-width:20px;height:20px;padding:0 4px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+  .type-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:4px;flex-shrink:0}
+  .type-cust{background:#E5EFED;color:#0E6E63}
+  .type-pros{background:#EDEAF3;color:#5B4A7A}
+  .acct-name{font-size:13px;font-weight:500;color:var(--ink)}
+  .acct-meta{font-size:11px;color:var(--faint)}
+  .acct-main{flex:1;min-width:0}
+  .minibar{height:8px;width:100px;border-radius:99px;overflow:hidden;display:flex;background:var(--hair);flex-shrink:0}
+  @media(max-width:680px){.minibar{display:none}}
+  .caret{color:var(--ghost);font-size:11px;flex-shrink:0}
+  .detail{background:#FAFCFC;padding:6px 20px 16px}
+  .d-row{display:flex;align-items:center;gap:12px;padding:3px 0}
+  .d-lbl{font-size:12px;color:var(--sub);width:200px;flex-shrink:0}
+  .d-track{flex:1;height:8px;border-radius:99px;background:var(--hair);overflow:hidden}
+  .d-fill{height:100%;border-radius:99px;display:block}
+  .d-pts{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--sub);width:70px;text-align:right}
+  .d-note{font-size:11px;color:var(--ghost);margin-top:8px;line-height:1.5}
+  .d-gate{font-size:11.5px;color:#8A5F12;background:#FBF1DE;border-radius:6px;padding:6px 10px;margin-top:8px;line-height:1.5}
+  .d-activation{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+  .d-activation h4{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:6px}
+  .play{display:flex;gap:8px;padding:3px 0;font-size:12px;color:var(--sub);line-height:1.45}
+  .play .team{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;width:82px;flex-shrink:0;padding-top:2px}
+  .team-sales{color:#3E8FA3}.team-mktg{color:#B5588A}.team-cs{color:#0E6E63}
+  .compl{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint)}
+  .compl-dot{width:8px;height:8px;border-radius:99px;display:inline-block}
+  /* Activation section */
+  .activation-card{margin-top:20px}
+  .flow{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch;margin:14px 0 18px}
+  @media(max-width:680px){.flow{grid-template-columns:1fr}.flow-arrow{transform:rotate(90deg);justify-self:center}}
+  .flow-box{border:1px solid var(--line);border-radius:10px;padding:14px;background:#FAFCFC}
+  .flow-box h3{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:8px}
+  .field{font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:3px 0;color:var(--ink)}
+  .field span{color:var(--ghost)}
+  .flow-arrow{display:flex;align-items:center;color:var(--ghost);font-size:20px}
+  .sync-note{font-size:11px;color:var(--faint);line-height:1.5;margin-top:8px}
+  .team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:820px){.team-grid{grid-template-columns:1fr}}
+  .team-card{border:1px solid var(--line);border-radius:10px;padding:14px}
+  .team-card h3{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:2px}
+  .team-dot{width:10px;height:10px;border-radius:99px;display:inline-block}
+  .team-card .aud{font-size:11px;color:var(--ghost);margin-bottom:8px}
+  .rule{display:flex;gap:8px;padding:3px 0;font-size:11.5px;color:var(--sub);line-height:1.45}
+  .rule .r-tier{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;min-width:38px;flex-shrink:0;padding-top:1px}
+  .why{background:var(--ink);border-color:var(--ink);color:#C9D6D6;font-size:13.5px;line-height:1.6;margin-top:20px}
+  .why h2{color:#fff;margin-bottom:8px}
+  .why p{margin-bottom:8px}
+  .why strong{color:#fff;font-weight:600}
+  .foot{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ghost);text-align:center;margin-top:24px}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Methodology demo &middot; fictional data</div>
+      <h1>Signal-Weighted ICP Scoring</h1>
+      <p class="lede">Account fit as an explicit allocation of 100 points across seven signals in three classes —
+      <strong>Fit</strong> (can we serve them), <strong>Opportunity</strong> (how much value is there), and
+      <strong>Timing</strong> (why now) — with separate weighting profiles per segment, a hard viability gate,
+      and an activation layer that pushes every score into the CRM for Sales, Marketing, and Customer Success.
+      Illustrated with a fictional patient-intake automation product. Adjust the model — every account rescores live.</p>
+    </div>
+    <button class="btn-reset" id="reset">&#8634; Reset model</button>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="row-between">
+          <h2>Weighting profile</h2>
+          <div class="seg-toggle" id="segToggle">
+            <button data-seg="MM" class="on">Mid-Market</button>
+            <button data-seg="ENT">Enterprise</button>
+          </div>
+        </div>
+        <p class="hint">Each segment gets its own 100-point allocation — the same signal can matter differently by segment.</p>
+        <div class="alloc" id="allocBar" role="img" aria-label="Weight allocation"></div>
+        <div class="alloc-note">
+          <span class="lbl">allocation of 100 pts</span>
+          <span class="warn" id="warn"></span>
+        </div>
+        <div id="sliders"></div>
+        <div class="gate-row">
+          <input type="checkbox" id="gateToggle" checked>
+          <label for="gateToggle">
+            <div class="g-title">Viability gate</div>
+            <div class="g-desc">An unsupported system isn't a low score — it's a non-starter. When on, accounts on
+            unsupported systems are capped at 39 and flagged <strong>Gated</strong> no matter how strong the other
+            signals are. Gates and weights are different tools: weights rank, gates disqualify.</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>System classification</h2>
+        <p class="hint">Click a system to move it between tiers. Tier determines the System Fit signal
+        (Primary = 100%, Secondary = 60%, Not supported = 0%) and drives the viability gate.</p>
+        <div id="tierBoard"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="tbl-head">
+          <h2>Ranked accounts <span class="count" id="count"></span></h2>
+          <div class="filters" id="filters">
+            <button data-f="All" class="on">All</button>
+            <button data-f="MM">MM</button>
+            <button data-f="ENT">ENT</button>
+            <button data-f="Prospect">Prospects</button>
+            <button data-f="Customer">Customers</button>
+          </div>
+        </div>
+        <div id="accounts"></div>
+      </div>
+
+      <div class="card activation-card">
+        <h2>From score to CRM — where the model earns its keep</h2>
+        <p class="hint">A score that lives in a spreadsheet is analysis. A score that lives on the Account record is
+        infrastructure. The model writes to the CRM nightly, and each go-to-market team consumes the same fields
+        through its own playbook — one number, three motions, zero debates about whose list is right.</p>
+
+        <div class="flow">
+          <div class="flow-box">
+            <h3>Model output</h3>
+            <div class="field">score <span>0–100, per run</span></div>
+            <div class="field">tier <span>A / B / C</span></div>
+            <div class="field">gate flag <span>viability</span></div>
+            <div class="field">signal breakdown <span>7 values</span></div>
+            <div class="field">data completeness <span>%</span></div>
+          </div>
+          <div class="flow-arrow">&#8594;</div>
+          <div class="flow-box">
+            <h3>CRM account fields</h3>
+            <div class="field">ICP_Score__c <span>number</span></div>
+            <div class="field">ICP_Tier__c <span>picklist</span></div>
+            <div class="field">ICP_Gated__c <span>checkbox</span></div>
+            <div class="field">ICP_Data_Coverage__c <span>percent</span></div>
+            <div class="field">ICP_Model_Version__c <span>text</span></div>
+            <div class="field">ICP_Scored_At__c <span>datetime</span></div>
+            <div class="sync-note">Nightly upsert, versioned. Score history retained so tier <em>movement</em> is
+            reportable — an account crossing B&rarr;A is itself a signal.</div>
+          </div>
+        </div>
+
+        <div class="team-grid">
+          <div class="team-card">
+            <h3><span class="team-dot" style="background:#3E8FA3"></span>Sales</h3>
+            <div class="aud">Consumes tiers on prospect accounts</div>
+            <div class="rule"><span class="r-tier" style="color:#0E6E63">A</span><span>Routed to AE same day, 24-hour first-touch SLA, priority sequence, territory-protected</span></div>
+            <div class="rule"><span class="r-tier" style="color:#C98A2B">B</span><span>SDR-led outbound, standard cadence, monitored for tier movement</span></div>
+            <div class="rule"><span class="r-tier" style="color:#9AA5A7">C</span><span>No active pursuit — inbound response only</span></div>
+            <div class="rule"><span class="r-tier" style="color:#8A5F12">GATE</span><span>Locked from pipeline creation; system-migration trigger reopens</span></div>
+          </div>
+          <div class="team-card">
+            <h3><span class="team-dot" style="background:#B5588A"></span>Marketing</h3>
+            <div class="aud">Consumes tiers for audience &amp; spend decisions</div>
+            <div class="rule"><span class="r-tier" style="color:#0E6E63">A</span><span>1:few ABM programs, paid retargeting audience, event target list</span></div>
+            <div class="rule"><span class="r-tier" style="color:#C98A2B">B</span><span>Nurture track, content syndication, intent monitoring</span></div>
+            <div class="rule"><span class="r-tier" style="color:#9AA5A7">C</span><span>Suppressed from paid spend — organic touch only</span></div>
+            <div class="rule"><span class="r-tier" style="color:#8A5F12">GATE</span><span>Watch-list audience for system-migration announcements</span></div>
+          </div>
+          <div class="team-card">
+            <h3><span class="team-dot" style="background:#0E6E63"></span>Customer Success</h3>
+            <div class="aud">Consumes tiers on customer accounts</div>
+            <div class="rule"><span class="r-tier" style="color:#0E6E63">A</span><span>Expansion whitespace flagged to CSM; growth agenda in next business review</span></div>
+            <div class="rule"><span class="r-tier" style="color:#C98A2B">B</span><span>Adoption play — close the standardization gap before expansion talk</span></div>
+            <div class="rule"><span class="r-tier" style="color:#9AA5A7">C</span><span>Retention focus; no expansion motion, protect the renewal</span></div>
+            <div class="rule"><span class="r-tier" style="color:#8A5F12">GATE</span><span>Migration-risk watch — their system moved off the supported list</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card why">
+        <h2>Why the model is built this way</h2>
+        <p><strong>Signals are grouped by the question they answer.</strong> Fit asks whether you can serve the
+        account, Opportunity asks how much value is there, Timing asks why now. Grouping keeps the weight debate
+        honest — you argue about questions, not just numbers.</p>
+        <p><strong>One dominant signal, declared openly.</strong> Most ICP models spread weight evenly to feel
+        "balanced." If one factor gates deal viability — here, system fit — the model should say so with its
+        weights, not hide it. And where a signal disqualifies rather than ranks, it gets a gate, not a weight.</p>
+        <p><strong>Segment-specific profiles.</strong> Mid-market and enterprise buyers don't value the same
+        signals equally, so each segment carries its own 100-point allocation rather than one blended formula.</p>
+        <p><strong>Scores are only as good as the data under them.</strong> Every account carries a data-coverage
+        figure. A 78 built on 60% coverage is a hypothesis, not a rank — and the CRM field makes that visible to
+        every consumer of the score.</p>
+        <p><strong>Activation is the deliverable.</strong> The model syncs to the CRM nightly and each team runs
+        its own playbook off the same fields. Scoring work that never reaches Sales, Marketing, and Customer
+        Success isn't a model — it's a hobby.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">All organizations, volumes, and system classifications above are fictional and for demonstration only.</p>
+</div>
+
+<script>
+const CLASSES = [
+  {key:"fit", name:"Fit", q:"Can we serve them?"},
+  {key:"opportunity", name:"Opportunity", q:"How much value is there?"},
+  {key:"timing", name:"Timing", q:"Why now?"},
+];
+const FACTORS = [
+  {key:"system", cls:"fit", label:"System Fit (EHR)", color:"#0E6E63", desc:"Which EHR the account runs. The dominant signal: integration depth determines time-to-value."},
+  {key:"footprint", cls:"fit", label:"Multi-Site Footprint", color:"#2F8F7A", desc:"Number of locations. More sites = broader deployment surface and stickier adoption."},
+  {key:"stack", cls:"fit", label:"Adjacent Stack Compatibility", color:"#6BAA75", desc:"How well their patient-engagement stack (forms, reminders, portal) plays with ours."},
+  {key:"volume", cls:"opportunity", label:"Intake Volume", color:"#3E8FA3", desc:"Monthly appointment/referral volume. Proxy for automation upside."},
+  {key:"manual", cls:"opportunity", label:"Manual Residual", color:"#8A6FA8", desc:"Share of intake still handled manually. Higher residual = larger addressable pain."},
+  {key:"standard", cls:"opportunity", label:"Workflow Standardization", color:"#C98A2B", desc:"Share of intake workflows that follow a repeatable pattern."},
+  {key:"engagement", cls:"timing", label:"Engagement Signal", color:"#B5588A", desc:"First-party intent: site visits, content, event attendance, inbound activity in the last 90 days."},
+];
+const DEFAULT_WEIGHTS = {
+  MM:{system:35,footprint:5,stack:5,volume:20,manual:10,standard:15,engagement:10},
+  ENT:{system:35,footprint:10,stack:5,volume:20,manual:15,standard:5,engagement:10},
+};
+const DEFAULT_TIERS = {
+  "Epic":"primary","athenahealth":"primary","Oracle Health":"primary",
+  "eClinicalWorks":"secondary","NextGen":"secondary","MEDITECH":"secondary","Veradigm":"secondary",
+  "Custom / homegrown":"unsupported","Paper-based":"unsupported",
+};
+const TIER_SCORE = {primary:1.0,secondary:0.6,unsupported:0};
+const TIER_META = {
+  primary:{label:"Primary",note:"Native integration, fastest deployment",color:"#0E6E63"},
+  secondary:{label:"Secondary",note:"Supported via middleware, longer ramp",color:"#8A5F12"},
+  unsupported:{label:"Not supported",note:"No viable integration path — triggers the gate",color:"#8A9598"},
+};
+const VOLUME_BANDS = [
+  {max:2000,score:0.3,label:"<2K"},{max:10000,score:0.6,label:"2–10K"},
+  {max:50000,score:0.85,label:"10–50K"},{max:Infinity,score:1.0,label:"50K+"},
+];
+const SITE_BANDS = [
+  {max:1,score:0.3,label:"1 site"},{max:5,score:0.6,label:"2–5 sites"},
+  {max:15,score:0.85,label:"6–15 sites"},{max:Infinity,score:1.0,label:"15+ sites"},
+];
+const ACCOUNTS = [
+  {name:"Riverbend Health Partners",type:"Customer",segment:"ENT",ehr:"Epic",volume:84000,sites:28,stack:0.8,standard:0.7,manual:0.55,engagement:0.75,coverage:0.95},
+  {name:"Cascade Orthopedic Group",type:"Prospect",segment:"MM",ehr:"athenahealth",volume:6200,sites:4,stack:0.7,standard:0.85,manual:0.6,engagement:0.8,coverage:0.9},
+  {name:"Lakeshore Community Care",type:"Prospect",segment:"MM",ehr:"eClinicalWorks",volume:4100,sites:6,stack:0.5,standard:0.6,manual:0.7,engagement:0.35,coverage:0.75},
+  {name:"Summit Behavioral Network",type:"Customer",segment:"ENT",ehr:"NextGen",volume:22000,sites:12,stack:0.55,standard:0.4,manual:0.65,engagement:0.5,coverage:0.85},
+  {name:"Harborview Medical Alliance",type:"Prospect",segment:"ENT",ehr:"Oracle Health",volume:61000,sites:19,stack:0.65,standard:0.55,manual:0.4,engagement:0.6,coverage:0.8},
+  {name:"Prairie Family Clinics",type:"Prospect",segment:"MM",ehr:"Paper-based",volume:1500,sites:2,stack:0.1,standard:0.3,manual:0.95,engagement:0.9,coverage:0.6},
+  {name:"Bluebird Pediatrics",type:"Customer",segment:"MM",ehr:"athenahealth",volume:1800,sites:1,stack:0.85,standard:0.9,manual:0.35,engagement:0.4,coverage:0.9},
+  {name:"Meridian Specialty Physicians",type:"Prospect",segment:"ENT",ehr:"Epic",volume:38000,sites:9,stack:0.75,standard:0.65,manual:0.5,engagement:0.85,coverage:0.95},
+  {name:"Foxglove Dermatology",type:"Prospect",segment:"MM",ehr:"Veradigm",volume:2900,sites:3,stack:0.6,standard:0.75,manual:0.5,engagement:0.25,coverage:0.7},
+  {name:"Stonebridge Health System",type:"Prospect",segment:"ENT",ehr:"Custom / homegrown",volume:92000,sites:34,stack:0.3,standard:0.5,manual:0.8,engagement:0.7,coverage:0.65},
+  {name:"Willow Creek Urgent Care",type:"Customer",segment:"MM",ehr:"MEDITECH",volume:8800,sites:7,stack:0.45,standard:0.55,manual:0.75,engagement:0.55,coverage:0.8},
+  {name:"Northgate Physician Group",type:"Prospect",segment:"ENT",ehr:"eClinicalWorks",volume:15500,sites:11,stack:0.5,standard:0.45,manual:0.6,engagement:0.45,coverage:0.7},
+  {name:"Alder Grove Family Medicine",type:"Customer",segment:"MM",ehr:"Epic",volume:5400,sites:5,stack:0.8,standard:0.7,manual:0.6,engagement:0.65,coverage:0.9},
+  {name:"Pinnacle Rehab Collective",type:"Prospect",segment:"MM",ehr:"NextGen",volume:3200,sites:8,stack:0.4,standard:0.5,manual:0.85,engagement:0.7,coverage:0.55},
+];
+const TIER_COLORS = {A:"#0E6E63",B:"#C98A2B",C:"#9AA5A7"};
+const GATE_CAP = 39;
+
+let weights = JSON.parse(JSON.stringify(DEFAULT_WEIGHTS));
+let tiers = {...DEFAULT_TIERS};
+let activeSegment = "MM";
+let filter = "All";
+let expanded = null;
+let gateOn = true;
+
+const band = (bands,v) => bands.find(b => v <= b.max);
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+function factorValues(a){
+  return {
+    system: TIER_SCORE[tiers[a.ehr]],
+    footprint: band(SITE_BANDS,a.sites).score,
+    stack: a.stack,
+    volume: band(VOLUME_BANDS,a.volume).score,
+    manual: a.manual,
+    standard: a.standard,
+    engagement: a.engagement,
+  };
+}
+
+function computeScores(){
+  return ACCOUNTS.map(a=>{
+    const w = weights[a.segment];
+    const total = Object.values(w).reduce((s,x)=>s+x,0)||1;
+    const f = factorValues(a);
+    const contrib = {}; let raw = 0;
+    for(const k in f){ contrib[k]=(w[k]/total)*f[k]*100; raw+=contrib[k]; }
+    raw = Math.round(raw);
+    const gated = gateOn && tiers[a.ehr]==="unsupported";
+    const score = gated ? Math.min(raw,GATE_CAP) : raw;
+    const tier = score>=75?"A":score>=55?"B":"C";
+    return {...a,score,raw,gated,tier,contrib,factors:f};
+  }).sort((x,y)=>y.score-x.score);
+}
+
+function plays(a){
+  const out = [];
+  const t = a.gated ? "GATE" : a.tier;
+  if(a.type==="Prospect"){
+    const sales = {A:"Route to AE same day — 24h first-touch SLA, priority sequence",
+                   B:"SDR-led outbound on standard cadence; watch for tier movement",
+                   C:"No active pursuit — inbound response only",
+                   GATE:"Pipeline creation locked; reopens on system-migration trigger"}[t];
+    const mktg = {A:"1:few ABM program + paid retargeting audience + event target list",
+                  B:"Nurture track with intent monitoring",
+                  C:"Suppressed from paid spend — organic only",
+                  GATE:"Watch-list audience for migration announcements"}[t];
+    out.push(["Sales","team-sales",sales],["Marketing","team-mktg",mktg]);
+  } else {
+    const cs = {A:"Expansion whitespace flagged to CSM — growth agenda at next business review",
+                B:"Adoption play: close the standardization gap before expansion talk",
+                C:"Retention focus — protect the renewal, no expansion motion",
+                GATE:"Migration-risk watch — system moved off the supported list"}[t];
+    const mktg = {A:"Customer-marketing: advocacy + cross-sell campaigns",
+                  B:"Adoption content track",
+                  C:"Excluded from expansion campaigns",
+                  GATE:"Excluded from all campaigns pending system review"}[t];
+    out.push(["Cust. Success","team-cs",cs],["Marketing","team-mktg",mktg]);
+  }
+  return out;
+}
+
+function renderControls(){
+  const w = weights[activeSegment];
+  const total = Object.values(w).reduce((s,x)=>s+x,0);
+  document.getElementById("allocBar").innerHTML = FACTORS.map(f=>{
+    const pct = (w[f.key]/(total||1))*100;
+    return `<div style="width:${pct}%;background:${f.color}">${pct>7?`<span>${Math.round(pct)}</span>`:""}</div>`;
+  }).join("");
+  const warn = document.getElementById("warn");
+  if(total!==100){ warn.style.display="inline"; warn.textContent=`raw total ${total} — auto-normalized`; }
+  else warn.style.display="none";
+
+  document.getElementById("sliders").innerHTML = CLASSES.map(c=>{
+    const clsFactors = FACTORS.filter(f=>f.cls===c.key);
+    const clsPts = clsFactors.reduce((s,f)=>s+w[f.key],0);
+    return `<div class="sig-class">
+      <div class="sig-class-head">
+        <span><span class="sig-class-name">${c.name}</span> <span class="sig-class-q">${c.q}</span></span>
+        <span class="sig-class-pts">${clsPts} pts</span>
+      </div>
+      ${clsFactors.map(f=>`
+        <div class="factor">
+          <div class="row-between">
+            <label for="sl-${f.key}"><span class="swatch" style="background:${f.color}"></span>${f.label}</label>
+            <span class="val">${w[f.key]}</span>
+          </div>
+          <input type="range" id="sl-${f.key}" min="0" max="60" value="${w[f.key]}" data-key="${f.key}" aria-label="${f.label} weight">
+          <p class="desc">${f.desc}</p>
+        </div>`).join("")}
+    </div>`;
+  }).join("");
+  document.querySelectorAll("#sliders input").forEach(inp=>{
+    inp.addEventListener("input",e=>{
+      weights[activeSegment][e.target.dataset.key]=Number(e.target.value);
+      renderControls(); renderAccounts();
+    });
+  });
+}
+
+function renderTiers(){
+  document.getElementById("tierBoard").innerHTML = ["primary","secondary","unsupported"].map(t=>`
+    <div>
+      <div class="tier-head">
+        <span class="tier-name" style="color:${TIER_META[t].color}">${TIER_META[t].label}</span>
+        <span class="tier-note">${TIER_META[t].note}</span>
+      </div>
+      <div class="tier-bin">
+        ${Object.keys(tiers).filter(e=>tiers[e]===t).map(e=>`<button class="chip" data-ehr="${esc(e)}">${esc(e)}</button>`).join("")}
+      </div>
+    </div>`).join("");
+  document.querySelectorAll(".chip").forEach(c=>{
+    c.addEventListener("click",()=>{
+      const order=["primary","secondary","unsupported"];
+      const e=c.dataset.ehr;
+      tiers[e]=order[(order.indexOf(tiers[e])+1)%3];
+      renderTiers(); renderAccounts();
+    });
+  });
+}
+
+function coverageColor(c){ return c>=0.85?"#0E6E63":c>=0.7?"#C98A2B":"#B5484A"; }
+
+function renderAccounts(){
+  const scored = computeScores();
+  const visible = scored.filter(a=>{
+    if(filter==="All") return true;
+    if(filter==="MM"||filter==="ENT") return a.segment===filter;
+    return a.type===filter;
+  });
+  document.getElementById("count").textContent=`(${visible.length})`;
+  document.getElementById("accounts").innerHTML = visible.map(a=>{
+    const open = expanded===a.name;
+    const badge = a.gated
+      ? `<span class="badge" style="background:#8A5F12">GATE</span>`
+      : `<span class="badge" style="background:${TIER_COLORS[a.tier]}">${a.tier}</span>`;
+    return `
+    <div class="acct">
+      <button class="acct-row" data-name="${esc(a.name)}" aria-expanded="${open}">
+        <span class="score" style="color:${a.gated?"#8A5F12":TIER_COLORS[a.tier]}">${a.score}</span>
+        ${badge}
+        <span class="acct-main">
+          <span class="acct-name">${esc(a.name)}</span>
+          <span class="type-tag ${a.type==="Customer"?"type-cust":"type-pros"}">${a.type}</span><br>
+          <span class="acct-meta">${a.segment==="MM"?"Mid-Market":"Enterprise"} &middot; ${esc(a.ehr)} &middot; ${band(VOLUME_BANDS,a.volume).label} appts/mo &middot; ${band(SITE_BANDS,a.sites).label}</span>
+        </span>
+        <span class="minibar">${FACTORS.map(f=>`<span style="display:block;width:${a.contrib[f.key]}%;background:${f.color}"></span>`).join("")}</span>
+        <span class="caret">${open?"&#9650;":"&#9660;"}</span>
+      </button>
+      ${open?`<div class="detail">
+        ${FACTORS.map(f=>`
+          <div class="d-row">
+            <span class="d-lbl">${f.label}</span>
+            <span class="d-track"><span class="d-fill" style="width:${Math.min(a.contrib[f.key]*2.5,100)}%;background:${f.color}"></span></span>
+            <span class="d-pts">+${a.contrib[f.key].toFixed(1)}</span>
+          </div>`).join("")}
+        ${a.gated?`<div class="d-gate">Viability gate applied — weighted score was ${a.raw}, capped at ${GATE_CAP}. System is not supported; no amount of opportunity or timing overrides fit.</div>`:""}
+        <p class="d-note">
+          <span class="compl"><span class="compl-dot" style="background:${coverageColor(a.coverage)}"></span>data coverage ${Math.round(a.coverage*100)}%</span>
+          ${a.coverage<0.7?" — treat this score as a hypothesis until enrichment closes the gaps":""}
+        </p>
+        <div class="d-activation">
+          <h4>CRM activation — what this score triggers</h4>
+          ${plays(a).map(p=>`<div class="play"><span class="team ${p[1]}">${p[0]}</span><span>${p[2]}</span></div>`).join("")}
+        </div>
+      </div>`:""}
+    </div>`;
+  }).join("");
+  document.querySelectorAll(".acct-row").forEach(r=>{
+    r.addEventListener("click",()=>{
+      expanded = expanded===r.dataset.name?null:r.dataset.name;
+      renderAccounts();
+    });
+  });
+}
+
+document.querySelectorAll("#segToggle button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    activeSegment=b.dataset.seg;
+    document.querySelectorAll("#segToggle button").forEach(x=>x.classList.toggle("on",x===b));
+    renderControls();
+  });
+});
+document.querySelectorAll("#filters button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    filter=b.dataset.f;
+    document.querySelectorAll("#filters button").forEach(x=>x.classList.toggle("on",x===b));
+    renderAccounts();
+  });
+});
+document.getElementById("gateToggle").addEventListener("change",e=>{
+  gateOn = e.target.checked;
+  renderAccounts();
+});
+document.getElementById("reset").addEventListener("click",()=>{
+  weights=JSON.parse(JSON.stringify(DEFAULT_WEIGHTS));
+  tiers={...DEFAULT_TIERS};
+  gateOn=true;
+  document.getElementById("gateToggle").checked=true;
+  renderControls(); renderTiers(); renderAccounts();
+});
+
+renderControls(); renderTiers(); renderAccounts();
+</script>
+</body>
+</html>
