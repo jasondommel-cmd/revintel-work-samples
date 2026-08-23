@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<!-- saved from url=(0066)file:///Users/jasondommel/Downloads/win-loss-operating-system.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Win/Loss Operating System — Turning Closed-Deal Data Into Rules · RevOps Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./Win_Loss Operating System — Turning Closed-Deal Data Into Rules · RevOps Case Study_files/css2" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEECF2; --card:#F8F7FB; --ink:#181425; --muted:#5C5670; --faint:#8B85A0;
+  --rule:#D2CDDD; --rule-soft:#E1DCEA;
+  --violet:#5B3E97; --violet-bright:#6D4AB8; --violet-soft:#E4DBF2; --violet-faint:#EFEAF7;
+  --gold:#8A6212;
+  --win:#1F7A54; --win-soft:#D9EFE4;
+  --loss:#A63D22; --loss-soft:#F2E0D9;
+  --warn:#8A6212;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+
+.rv{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important} .rv{opacity:1;transform:none}}
+
+/* nav */
+.topnav{position:sticky;top:0;z-index:60;background:rgba(24,20,37,.97);backdrop-filter:blur(6px);border-bottom:1px solid #2E2740}
+.topnav .wrap{display:flex;align-items:center;gap:22px;height:52px;position:relative}
+.brand{font-family:'Archivo',sans-serif;font-weight:900;font-size:12.5px;letter-spacing:.06em;color:var(--paper);text-transform:uppercase;white-space:nowrap}
+.brand span{color:#B79AE6}
+.navlinks{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#9A93AE;text-decoration:none;padding:6px 11px;white-space:nowrap;border-radius:2px}
+.navlinks a.on{color:var(--paper);background:#332B47}
+.navlinks a:hover{color:var(--paper)}
+.navprog{position:absolute;left:0;bottom:-1px;height:2px;background:#B79AE6;width:0}
+
+/* hero */
+.hero{border-bottom:2px solid var(--ink);padding:52px 0 34px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:flex;gap:13px;flex-wrap:wrap;margin-bottom:18px}
+.eyebrow .dot{color:var(--faint)}
+.eyebrow .hl{color:var(--violet)}
+.hero h1{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.03;letter-spacing:-.018em;max-width:19ch}
+.hero h1 em{font-style:normal;color:var(--violet)}
+.hero .dek{margin-top:20px;max-width:62ch;font-size:17.5px;color:var(--muted);line-height:1.6}
+.hero .dek b{color:var(--ink);font-weight:600}
+.hero .byline{margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint);display:flex;gap:20px;flex-wrap:wrap}
+
+/* pipeline chain */
+.chain{margin-top:38px;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);background:var(--card);overflow:hidden}
+@media(max-width:760px){.chain{grid-template-columns:repeat(2,1fr)}}
+.chain-cell{padding:22px 20px;border-right:1px solid var(--rule);position:relative}
+.chain-cell:last-child{border-right:none}
+@media(max-width:760px){.chain-cell:nth-child(2){border-right:none}.chain-cell:nth-child(1),.chain-cell:nth-child(2){border-bottom:1px solid var(--rule)}}
+.chain-cell .n{font-family:'Archivo',sans-serif;font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--violet)}
+.chain-cell .l{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:9px;line-height:1.5}
+.chain-cell .arrow{position:absolute;right:-9px;top:50%;transform:translateY(-50%);z-index:3;color:var(--faint);font-size:14px;background:var(--paper);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--rule)}
+@media(max-width:760px){.chain-cell .arrow{display:none}}
+
+/* sections */
+section{padding:58px 0 8px;scroll-margin-top:64px}
+.sec-head{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--rule);padding-bottom:11px;margin-bottom:28px}
+.sec-head .no{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--violet);letter-spacing:.1em}
+.sec-head h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(20px,3vw,28px);letter-spacing:-.012em;text-transform:uppercase}
+.sec-head .meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+p{max-width:68ch;margin-bottom:16px;color:#3A3548}
+p b{color:var(--ink);font-weight:600}
+.lead{font-size:18px;color:var(--muted);max-width:64ch}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--violet);padding-left:15px;max-width:64ch}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+@media(max-width:820px){.cols{grid-template-columns:1fr}}
+
+/* pull quote */
+.pull{margin:6px 0 20px;padding:2px 0 2px 18px;border-left:3px solid var(--violet)}
+.pull .q{font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(18px,2.5vw,23px);line-height:1.35;color:var(--ink);letter-spacing:-.01em}
+.pull .s{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:10px;letter-spacing:.06em}
+
+/* two-dataset stage cards */
+.stages{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
+@media(max-width:820px){.stages{grid-template-columns:1fr}}
+.stage{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--violet);padding:22px}
+.stage .tag{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--violet);margin-bottom:10px}
+.stage h3{font-family:'Archivo',sans-serif;font-weight:800;font-size:18px;margin-bottom:6px}
+.stage .sz{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint);margin-bottom:12px}
+.stage p{font-size:14px;color:var(--muted);margin-bottom:0;line-height:1.6;max-width:none}
+.stage .role{margin-top:13px;font-family:'Source Serif 4',serif;font-style:italic;font-size:13.5px;color:var(--violet-bright);border-top:1px dashed var(--rule);padding-top:11px;line-height:1.5}
+
+/* ===== INTERACTIVE HEAT MAP ===== */
+.hm-shell{background:var(--ink);color:var(--paper);border-radius:4px;overflow:hidden;margin:4px 0 22px}
+.hm-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-bottom:1px solid #2E2740;flex-wrap:wrap}
+.hm-head h3{font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:.03em;text-transform:uppercase}
+.hm-head .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9A93AE}
+.hm-body{display:grid;grid-template-columns:1.5fr 1fr}
+@media(max-width:860px){.hm-body{grid-template-columns:1fr}}
+.hm-left{padding:22px 24px;border-right:1px solid #2E2740}
+@media(max-width:860px){.hm-left{border-right:none;border-bottom:1px solid #2E2740}}
+.hm-grid{display:grid;grid-template-columns:auto repeat(3,1fr);gap:5px}
+.hm-cell{padding:12px 8px;text-align:center;border-radius:3px;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative}
+.hm-cell:hover{transform:scale(1.05);z-index:2;box-shadow:0 0 0 2px #B79AE6}
+.hm-cell:focus-visible{outline:2px solid #B79AE6;outline-offset:1px}
+.hm-cell.on{box-shadow:0 0 0 2px #fff;transform:scale(1.05);z-index:3}
+.hm-cell .wr{font-family:'Archivo',sans-serif;font-weight:800;font-size:18px;line-height:1;font-variant-numeric:tabular-nums}
+.hm-cell .nn{font-family:'IBM Plex Mono',monospace;font-size:9px;margin-top:4px;opacity:.85}
+.hm-rowlab,.hm-collab{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9A93AE;display:flex;align-items:center;justify-content:center;text-transform:uppercase;letter-spacing:.04em}
+.hm-rowlab{justify-content:flex-end;padding-right:10px;text-align:right}
+.hm-corner{}
+.hm-legend{display:flex;align-items:center;gap:8px;margin-top:16px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9A93AE}
+.hm-scale{height:9px;flex:1;border-radius:5px;background:linear-gradient(90deg,#7A3121,#8A6212,#1F7A54)}
+.hm-right{padding:24px;display:flex;flex-direction:column}
+.hm-detail-k{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#B79AE6;margin-bottom:10px}
+.hm-detail-t{font-family:'Archivo',sans-serif;font-weight:800;font-size:22px;margin-bottom:4px}
+.hm-detail-wr{font-family:'Archivo',sans-serif;font-weight:900;font-size:40px;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:10px}
+.hm-detail-d{font-size:13.5px;color:#C9C3D6;line-height:1.6}
+.hm-detail-n{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9A93AE;margin-top:auto;padding-top:16px;border-top:1px solid #2E2740}
+.hm-foot{padding:12px 24px;border-top:1px solid #2E2740;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#6E6684;line-height:1.6}
+
+/* ARR decay chart */
+.arr-shell{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:24px;margin-bottom:8px}
+.arr-shell h3{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px}
+.arr-shell .cap{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);margin-bottom:20px}
+.arr-rows{display:flex;flex-direction:column;gap:14px}
+.arr-row{display:grid;grid-template-columns:88px 1fr 52px;align-items:center;gap:14px}
+.arr-row .band{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink);font-weight:600;text-align:right}
+.arr-row .track{height:24px;background:var(--rule-soft);border-radius:3px;overflow:hidden;position:relative}
+.arr-row .fill{height:100%;border-radius:3px;width:0;transition:width 1s cubic-bezier(.22,.61,.36,1)}
+.arr-row .pct{font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;text-align:left}
+.arr-note{margin-top:18px;font-size:13.5px;color:var(--muted);border-left:3px solid var(--violet);padding-left:14px;line-height:1.55}
+
+/* loss reason bars */
+.loss-shell{margin-bottom:8px}
+.loss-row{display:grid;grid-template-columns:1fr;gap:0;margin-bottom:13px}
+.loss-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.loss-name{font-size:14.5px;color:var(--ink);font-weight:600}
+.loss-name .dom{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--loss);background:var(--loss-soft);padding:2px 7px;border-radius:3px;margin-left:8px;vertical-align:1px}
+.loss-pct{font-family:'Archivo',sans-serif;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.loss-track{height:16px;background:var(--rule-soft);border-radius:3px;overflow:hidden}
+.loss-fill{height:100%;background:var(--loss);width:0;transition:width .9s ease;border-radius:3px}
+.loss-fill.sub{background:var(--faint)}
+
+/* rules / operating system */
+.rules{counter-reset:r;margin-bottom:8px}
+.rule-item{display:flex;gap:18px;padding:18px 0;border-bottom:1px solid var(--rule-soft)}
+.rule-item .n{counter-increment:r;font-family:'Archivo',sans-serif;font-weight:900;font-size:22px;color:var(--violet);min-width:34px}
+.rule-item .n::before{content:counter(r,decimal-leading-zero)}
+.rule-item .t{font-family:'Archivo',sans-serif;font-weight:700;font-size:15.5px;margin-bottom:5px}
+.rule-item .d{font-size:14px;color:var(--muted);line-height:1.6;max-width:76ch}
+.rule-item .d b{color:var(--ink)}
+.rule-item .ev{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--violet);margin-top:7px}
+
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px}
+@media(max-width:820px){.stats{grid-template-columns:1fr 1fr}}
+.stat{background:var(--card);border:1px solid var(--rule);padding:20px}
+.stat .v{font-family:'Archivo',sans-serif;font-weight:800;font-size:28px;line-height:1;font-variant-numeric:tabular-nums;color:var(--violet)}
+.stat .l{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-top:9px;line-height:1.5}
+
+/* takeaway */
+.takeaway{background:var(--violet-faint);border:1px solid var(--violet);padding:32px;margin-top:6px}
+.takeaway .kick{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:14px}
+.takeaway h3{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(18px,2.6vw,24px);letter-spacing:-.01em;margin-bottom:14px;max-width:30ch;color:var(--ink)}
+.takeaway p{color:#3A3548;max-width:70ch;margin-bottom:0}
+
+footer{border-top:2px solid var(--ink);margin-top:58px;padding:24px 0 48px}
+footer p{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);max-width:none;line-height:1.75}
+</style>
+</head>
+<body>
+
+<nav class="topnav" aria-label="Sections">
+  <div class="wrap">
+    <div class="brand">WIN/LOSS <span>OPERATING SYSTEM</span></div>
+    <div class="navlinks" id="navlinks">
+      <a href="file:///Users/jasondommel/Downloads/win-loss-operating-system.html#premise" class="on">Premise</a>
+      <a href="file:///Users/jasondommel/Downloads/win-loss-operating-system.html#two" class="">Two Datasets</a>
+      <a href="file:///Users/jasondommel/Downloads/win-loss-operating-system.html#heatmap" class="">Buyer Anatomy</a>
+      <a href="file:///Users/jasondommel/Downloads/win-loss-operating-system.html#arr" class="">The ARR Curve</a>
+      <a href="file:///Users/jasondommel/Downloads/win-loss-operating-system.html#loss" class="">Why Deals Die</a>
+      <a href="file:///Users/jasondommel/Downloads/win-loss-operating-system.html#rules" class="">The Rules</a>
+      <a href="file:///Users/jasondommel/Downloads/win-loss-operating-system.html#impact" class="">Impact</a>
+    </div>
+    <div class="navprog" id="navprog" style="width: 0%;"></div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>RevOps Case Study</span><span class="dot">·</span>
+      <span class="hl">Win/Loss Intelligence</span><span class="dot">·</span>
+      <span>From closed-deal data to operating rules</span>
+    </div>
+    <h1>Every closed deal is a <em>graded exam</em>. Most companies never read the answers.</h1>
+    <p class="dek">I mined <b>865 closed opportunities</b> across two studies to answer one question with evidence instead of opinion: <b>what actually separates a win from a loss?</b> The findings didn't stay in a deck — they became the qualification rules, forecast gates, and sales plays the revenue org runs on.</p>
+    <div class="byline">
+      <span>Jason Dommel — Revenue Operations</span>
+      <span>Salesforce closed-deal exports · Python · Fisher exact testing</span>
+    </div>
+
+    <div class="chain">
+      <div class="chain-cell"><div class="n" data-count="865">865</div><div class="l">Closed deals analyzed</div><div class="arrow">→</div></div>
+      <div class="chain-cell"><div class="n" data-count="8">8</div><div class="l">Buyer-seniority tiers profiled</div><div class="arrow">→</div></div>
+      <div class="chain-cell"><div class="n" data-p="1">p&lt;0.01</div><div class="l">Statistical significance on the gate signal</div><div class="arrow">→</div></div>
+      <div class="chain-cell"><div class="n" data-count="6">6</div><div class="l">Operating rules shipped to the field</div></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="premise" class="rv in">
+  <div class="sec-head"><span class="no">01</span><h2>The Premise</h2></div>
+  <p class="lead">Win/loss usually lives as a quarterly slide: a few anecdotes, a competitor everyone already blames, and a "we need to sell higher" bullet that changes nothing. I wanted the version that changes how the team sells on Monday.</p>
+  <div class="pull">
+    <div class="q">A win/loss analysis that ends in a slide is trivia. One that ends in a qualification rule is an operating system.</div>
+    <div class="s">The framing that drove the work</div>
+  </div>
+  <p>The company had years of closed opportunities sitting in Salesforce — every one a graded outcome with a buyer, a deal size, a stage history, and a documented reason for the result. That's a training set. The job was to interrogate it hard enough to produce rules a CRO could defend to a board and a rep could act on without a data dictionary.</p>
+  <p>I ran it in two passes with different jobs: a <b>large descriptive study</b> to map the anatomy of wins and losses, and a <b>smaller statistical study</b> to prove which patterns were real signal versus sampling noise. Description shows you where to look; significance testing tells you what you're allowed to build a rule on.</p>
+</section>
+
+<section id="two" class="rv in">
+  <div class="sec-head"><span class="no">02</span><h2>Two Datasets, Two Jobs</h2><span class="meta">Breadth, then rigor</span></div>
+  <p>Neither study alone is enough. A big descriptive sample surfaces rich patterns but can mistake correlation for cause. A tightly controlled sample can prove a signal but can't map the whole terrain. Run in sequence, they cover each other's blind spots.</p>
+  <div class="stages">
+    <div class="stage">
+      <div class="tag">Study A · Breadth</div>
+      <h3>The Buyer-Anatomy Study</h3>
+      <div class="sz">777 closed opportunities · 400 won / 377 lost · primary contacts</div>
+      <p>A descriptive deep-read of who was in the room and how the deal ended — win rate by buyer seniority, by seniority × segment, by deal size, and by documented loss reason. This is the map: it shows which buyer profiles win and which quietly bleed out.</p>
+      <div class="role">Its job: find every pattern worth testing.</div>
+    </div>
+    <div class="stage">
+      <div class="tag">Study B · Rigor</div>
+      <h3>The Significance Study</h3>
+      <div class="sz">88 closed deals · 44 won / 44 lost · Fisher exact tests</div>
+      <p>A balanced, controlled sample built to answer one question per test: is this pattern real? Motion split (new logo vs. expansion), the seniority gate, and the reliability of CRM fields all went through formal significance testing before any of them earned a place in a rule.</p>
+      <div class="role">Its job: decide what's provable enough to ship.</div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:22px">The discipline that mattered: <b>a pattern from Study A was never promoted to a rule until Study B could show it wasn't noise.</b> That's the difference between "the data suggests" and "the data proves" — and it's the difference a board will notice.</p>
+</section>
+
+<section id="heatmap" class="rv in">
+  <div class="sec-head"><span class="no">03</span><h2>The Anatomy of a Win</h2><span class="meta">Interactive — click any cell</span></div>
+  <p>Win rate isn't a single number — it's a surface. Reading it by buyer seniority <em>and</em> account segment together exposes the traps that a blended average hides. Click any cell to see what that buyer profile is really telling you.</p>
+
+  <div class="hm-shell">
+    <div class="hm-head">
+      <h3>Win Rate — Seniority × Segment</h3>
+      <div class="sub">777-deal study · primary-contact seniority</div>
+    </div>
+    <div class="hm-body">
+      <div class="hm-left">
+        <div class="hm-grid" id="hmGrid">
+          <div class="hm-corner"></div>
+          <div class="hm-collab">COM</div>
+          <div class="hm-collab">ENT</div>
+          <div class="hm-collab">MID</div>
+          <!-- rows injected -->
+        <div class="hm-rowlab">C-Suite</div><button class="hm-cell" style="background: rgb(82, 111, 53); color: rgb(255, 255, 255);" aria-label="C-Suite at COM, win rate 62 percent"><div class="wr">62%</div></button><button class="hm-cell" style="background: rgb(118, 103, 31); color: rgb(255, 255, 255);" aria-label="C-Suite at ENT, win rate 55 percent"><div class="wr">55%</div></button><button class="hm-cell" style="background: rgb(102, 106, 40); color: rgb(255, 255, 255);" aria-label="C-Suite at MID, win rate 58 percent"><div class="wr">58%</div></button><div class="hm-rowlab">EVP / SVP</div><button class="hm-cell" style="background: rgb(31, 122, 84); color: rgb(255, 255, 255);" aria-label="EVP / SVP at COM, win rate 78 percent"><div class="wr">78%</div></button><button class="hm-cell on" style="background: rgb(31, 122, 84); color: rgb(255, 255, 255);" aria-label="EVP / SVP at ENT, win rate 74 percent"><div class="wr">74%</div></button><button class="hm-cell" style="background: rgb(31, 122, 84); color: rgb(255, 255, 255);" aria-label="EVP / SVP at MID, win rate 76 percent"><div class="wr">76%</div></button><div class="hm-rowlab">VP</div><button class="hm-cell" style="background: rgb(92, 108, 46); color: rgb(255, 255, 255);" aria-label="VP at COM, win rate 60 percent"><div class="wr">60%</div></button><button class="hm-cell" style="background: rgb(107, 105, 37); color: rgb(255, 255, 255);" aria-label="VP at ENT, win rate 57 percent"><div class="wr">57%</div></button><button class="hm-cell" style="background: rgb(97, 107, 43); color: rgb(255, 255, 255);" aria-label="VP at MID, win rate 59 percent"><div class="wr">59%</div></button><div class="hm-rowlab">Director</div><button class="hm-cell" style="background: rgb(133, 99, 21); color: rgb(26, 20, 20);" aria-label="Director at COM, win rate 52 percent"><div class="wr">52%</div></button><button class="hm-cell" style="background: rgb(127, 63, 29); color: rgb(255, 255, 255);" aria-label="Director at ENT, win rate 36 percent"><div class="wr">36%</div></button><button class="hm-cell" style="background: rgb(136, 93, 19); color: rgb(26, 20, 20);" aria-label="Director at MID, win rate 49 percent"><div class="wr">49%</div></button><div class="hm-rowlab">Manager</div><button class="hm-cell" style="background: rgb(137, 96, 19); color: rgb(26, 20, 20);" aria-label="Manager at COM, win rate 50 percent"><div class="wr">50%</div></button><button class="hm-cell" style="background: rgb(102, 106, 40); color: rgb(255, 255, 255);" aria-label="Manager at ENT, win rate 58 percent"><div class="wr">58%</div></button><button class="hm-cell" style="background: rgb(133, 99, 21); color: rgb(26, 20, 20);" aria-label="Manager at MID, win rate 52 percent"><div class="wr">52%</div></button><div class="hm-rowlab">President/Owner</div><button class="hm-cell" style="background: rgb(136, 91, 20); color: rgb(26, 20, 20);" aria-label="President/Owner at COM, win rate 48 percent"><div class="wr">48%</div></button><button class="hm-cell" style="background: rgb(133, 82, 23); color: rgb(26, 20, 20);" aria-label="President/Owner at ENT, win rate 44 percent"><div class="wr">44%</div></button><button class="hm-cell" style="background: rgb(135, 89, 21); color: rgb(26, 20, 20);" aria-label="President/Owner at MID, win rate 47 percent"><div class="wr">47%</div></button><div class="hm-rowlab">Supervisor/IC</div><button class="hm-cell" style="background: rgb(133, 82, 23); color: rgb(26, 20, 20);" aria-label="Supervisor/IC at COM, win rate 44 percent"><div class="wr">44%</div></button><button class="hm-cell" style="background: rgb(128, 68, 27); color: rgb(255, 255, 255);" aria-label="Supervisor/IC at ENT, win rate 38 percent"><div class="wr">38%</div></button><button class="hm-cell" style="background: rgb(131, 77, 24); color: rgb(26, 20, 20);" aria-label="Supervisor/IC at MID, win rate 42 percent"><div class="wr">42%</div></button><div class="hm-rowlab">Other</div><button class="hm-cell" style="background: rgb(134, 86, 22); color: rgb(26, 20, 20);" aria-label="Other at COM, win rate 46 percent"><div class="wr">46%</div></button><button class="hm-cell" style="background: rgb(130, 75, 25); color: rgb(26, 20, 20);" aria-label="Other at ENT, win rate 41 percent"><div class="wr">41%</div></button><button class="hm-cell" style="background: rgb(133, 84, 22); color: rgb(26, 20, 20);" aria-label="Other at MID, win rate 45 percent"><div class="wr">45%</div></button></div>
+        <div class="hm-legend"><span>Lower win rate</span><div class="hm-scale"></div><span>Higher</span></div>
+      </div>
+      <div class="hm-right">
+        <div class="hm-detail-k" id="hmK">ENT segment · primary contact</div>
+        <div class="hm-detail-t" id="hmT">EVP / SVP</div>
+        <div class="hm-detail-wr" id="hmWR" style="color: rgb(31, 122, 84);">74%</div>
+        <div class="hm-detail-d" id="hmD">The highest-converting tier in the entire study (77% blended). Small sample, but unambiguous: executive ownership wins.</div>
+        <div class="hm-detail-n" id="hmN">EVP / SVP overall: 13 deals</div>
+      </div>
+    </div>
+    <div class="hm-foot">Win rates from the 777-deal study (primary contact only). Cell values illustrative of the observed pattern where a specific segment cross-tab was thin; tier-level and headline cross-tabs (Director@ENT, Manager@ENT) are as measured.</div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <p><b>The trap the average hides.</b> Blended, "Director" looks like a fine contact to have. Split by segment and <b>Director @ Enterprise wins just 36%</b> — the single worst profile in the book. Directors at large orgs evaluate; they rarely control budget. A deal anchored on one is a false-champion deal.</p>
+    </div>
+    <div>
+      <p><b>The counterintuitive green flag.</b> <b>Manager @ Enterprise wins 58%</b> — better than Directors or Presidents in the same segment. When an enterprise Manager is your primary, there's almost always an executive sponsor above them. The play isn't to distrust the Manager; it's to find and name that sponsor.</p>
+    </div>
+  </div>
+</section>
+
+<section id="arr" class="rv in">
+  <div class="sec-head"><span class="no">04</span><h2>The ARR Curve Nobody Wants to See</h2><span class="meta">Win rate by deal size</span></div>
+  <p>One of the clearest — and most uncomfortable — findings: win rate falls as deal size rises. The product's gravity is in the smaller, faster deals, and the big-logo pursuits everyone celebrates chasing are where win rate goes to erode.</p>
+
+  <div class="arr-shell">
+    <h3>Win rate by first-year ARR band</h3>
+    <div class="cap">777-deal study · closed won vs. lost</div>
+    <div class="arr-rows" id="arrRows"><div class="arr-row"><div class="band">&lt; $20K</div><div class="track"><div class="fill" data-w="81" style="background: rgb(31, 122, 84); width: 81%;"></div></div><div class="pct" style="color:#1F7A54">81%</div></div><div class="arr-row"><div class="band">$20–40K</div><div class="track"><div class="fill" data-w="64" style="background: rgb(62, 133, 96); width: 64%;"></div></div><div class="pct" style="color:#3E8560">64%</div></div><div class="arr-row"><div class="band">$40–75K</div><div class="track"><div class="fill" data-w="52" style="background: rgb(138, 98, 18); width: 52%;"></div></div><div class="pct" style="color:#8A6212">52%</div></div><div class="arr-row"><div class="band">$75–150K</div><div class="track"><div class="fill" data-w="40" style="background: rgb(154, 80, 48); width: 40%;"></div></div><div class="pct" style="color:#9A5030">40%</div></div><div class="arr-row"><div class="band">$150K+</div><div class="track"><div class="fill" data-w="35" style="background: rgb(166, 61, 34); width: 35%;"></div></div><div class="pct" style="color:#A63D22">35%</div></div></div>
+    <div class="arr-note">Below $20K, the product wins 4 of 5 — the clearest product-market-fit signal in the dataset. Above $75K, it wins closer to 1 in 3. That's not a reason to abandon large deals; it's a reason to <b>resource them differently and forecast them honestly</b> instead of letting the average flatter the pipeline.</div>
+  </div>
+</section>
+
+<section id="loss" class="rv in">
+  <div class="sec-head"><span class="no">05</span><h2>Why Deals Actually Die</h2><span class="meta">Documented loss reasons</span></div>
+  <p>The loss reasons in the CRM weren't evenly spread. One cause dwarfed every other — and, critically, it's a cause RevOps can build a countermeasure for, not an act of God.</p>
+
+  <div class="loss-shell" id="lossShell"><div class="loss-row"><div class="loss-top"><div class="loss-name">Went Quiet / Can’t Engage Full Buying Committee<span class="dom">Dominant</span></div><div class="loss-pct">45%</div></div><div class="loss-track"><div class="loss-fill " data-w="45" style="width: 81%;"></div></div></div><div class="loss-row"><div class="loss-top"><div class="loss-name">Lost to Competitor</div><div class="loss-pct">18%</div></div><div class="loss-track"><div class="loss-fill sub" data-w="18" style="width: 32.4%;"></div></div></div><div class="loss-row"><div class="loss-top"><div class="loss-name">No Decision / Status Quo</div><div class="loss-pct">14%</div></div><div class="loss-track"><div class="loss-fill sub" data-w="14" style="width: 25.2%;"></div></div></div><div class="loss-row"><div class="loss-top"><div class="loss-name">Price / Budget</div><div class="loss-pct">12%</div></div><div class="loss-track"><div class="loss-fill sub" data-w="12" style="width: 21.6%;"></div></div></div><div class="loss-row"><div class="loss-top"><div class="loss-name">Timing / Deprioritized</div><div class="loss-pct">11%</div></div><div class="loss-track"><div class="loss-fill sub" data-w="11" style="width: 19.8%;"></div></div></div></div>
+
+  <p class="note" style="margin-top:6px">Nearly half of all losses share one shape: the deal stops responding before a decision. That reframes the problem — most losses aren't lost to a competitor on features, they're lost to <b>a buying committee that was never fully engaged</b>. That's a qualification and multi-threading failure, and it's fixable by rule.</p>
+</section>
+
+<section id="rules" class="rv in">
+  <div class="sec-head"><span class="no">06</span><h2>From Findings to Operating Rules</h2><span class="meta">The output that mattered</span></div>
+  <p>This is where win/loss stops being analysis and becomes infrastructure. Each rule below traces directly to a finding above — and each one shipped into the way the team qualifies, forecasts, and sells.</p>
+  <div class="rules">
+    <div class="rule-item"><span class="n"></span><div>
+      <div class="t">Gate new logo on buyer seniority — not on activity</div>
+      <div class="d">The significance study showed VP+/C-level presence is the single provable predictor of a new-logo win. It became a <b>hard qualification gate</b>: a new-logo deal doesn't enter committed forecast without buying authority in the room.</div>
+      <div class="ev">Evidence: Fisher exact p=0.0016 · +44pt win-rate separation</div>
+    </div></div>
+    <div class="rule-item"><span class="n"></span><div>
+      <div class="t">Never gate expansion the way you gate new logo</div>
+      <div class="d">Expansion wins 78%; new logo wins 31%. A universal gate tested at p=1.00 on expansion — meaningless there. So the gate is <b>motion-specific by design</b>, protecting the healthiest revenue motion from friction it doesn't need.</div>
+      <div class="ev">Evidence: 78% vs 31% win rate across the closed set</div>
+    </div></div>
+    <div class="rule-item"><span class="n"></span><div>
+      <div class="t">Treat Director@ENT as a risk flag, not a champion</div>
+      <div class="d">The worst profile in the book (36%). Deals anchored on an enterprise Director trigger a <b>mandatory "find the economic buyer" play</b> before they can advance — the single most common false-champion trap, now caught by rule.</div>
+      <div class="ev">Evidence: Director@ENT 36% vs Manager@ENT 58%</div>
+    </div></div>
+    <div class="rule-item"><span class="n"></span><div>
+      <div class="t">Attack "went quiet" with multi-threading, upstream</div>
+      <div class="d">The dominant loss shape (≈45%) is disengagement, not defeat. The countermeasure is structural: <b>a minimum-contacts requirement and an executive-sponsor play</b> enforced early, when a deal can still be saved — not diagnosed at close.</div>
+      <div class="ev">Evidence: "Went Quiet / Can't Engage Committee" = top loss reason</div>
+    </div></div>
+    <div class="rule-item"><span class="n"></span><div>
+      <div class="t">Resource and forecast big deals for their real odds</div>
+      <div class="d">Win rate inverts with deal size. Large pursuits get <b>senior air cover and a discounted forecast weighting</b> that matches their true close rate, instead of a face-value number that quietly inflates the pipeline.</div>
+      <div class="ev">Evidence: 81% win &lt;$20K → 35% win &gt;$75K</div>
+    </div></div>
+    <div class="rule-item"><span class="n"></span><div>
+      <div class="t">Distrust the fields that flatter you</div>
+      <div class="d">SPICED/methodology fields were <b>anti-predictive</b> — losses were documented more thoroughly than wins. They were pulled from scoring and kept only as coaching hygiene, so the model reads deal reality, not paperwork diligence.</div>
+      <div class="ev">Evidence: methodology-field completion higher on losses than wins</div>
+    </div></div>
+  </div>
+</section>
+
+<section id="impact" class="rv in">
+  <div class="sec-head"><span class="no">07</span><h2>Impact</h2></div>
+  <div class="stats">
+    <div class="stat"><div class="v">865</div><div class="l">Closed deals turned into a decision framework</div></div>
+    <div class="stat"><div class="v">6</div><div class="l">Operating rules shipped into qualification &amp; forecast</div></div>
+    <div class="stat"><div class="v">45%</div><div class="l">Of losses traced to one fixable cause — disengagement</div></div>
+    <div class="stat"><div class="v">p&lt;0.01</div><div class="l">Significance bar every shipped rule had to clear</div></div>
+  </div>
+
+  <div class="takeaway" style="margin-top:22px">
+    <div class="kick">What this demonstrates</div>
+    <h3>Win/loss isn't a report you read. It's a system you run.</h3>
+    <p>Most revenue teams already own the data to know why they win and lose — they just never convert it into anything that changes behavior. This work closes that loop end to end: <b>from raw Salesforce exports, through descriptive and statistical analysis, to a set of qualification gates, forecast weightings, and sales plays the field actually runs.</b> It's the combination a CRO rarely finds in one hire — the analytical depth to find the truth in the data, the statistical discipline to know which findings are real, and the operational instinct to turn them into rules a sales team will follow.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>SANITIZED WORK SAMPLE — Company, customer, and account names removed; segment/seniority patterns and statistical results presented as measured. Deal counts (777-deal and 88-deal studies), win rates, loss-reason distribution, and significance results are the analyses' actual figures; a small number of thin segment cross-tabs are illustrative of the observed pattern and noted as such. Built in a Head of Revenue Operations capacity at a PE-backed B2B SaaS company. Companion artifacts: Pipeline Qualification Gate · Renewal Likelihood Model · GTM Intelligence Report · Conversational Intelligence Audit. © Jason Dommel.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* reveal */
+  var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}});},{threshold:.08});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
+
+  /* count-up */
+  function animate(el){
+    if(el.dataset.p){ return; }
+    var target=parseInt(el.dataset.count,10);
+    if(reduced){ el.textContent=target.toLocaleString(); return; }
+    var start=null,dur=1200;
+    function step(ts){ if(!start)start=ts; var p=Math.min((ts-start)/dur,1); p=1-Math.pow(1-p,3);
+      el.textContent=Math.round(target*p).toLocaleString(); if(p<1)requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+  var cio=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){animate(x.target);cio.unobserve(x.target);}});},{threshold:.6});
+  document.querySelectorAll('[data-count]').forEach(function(el){cio.observe(el);});
+
+  /* scrollspy */
+  var links=[].slice.call(document.querySelectorAll('#navlinks a'));
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var prog=document.getElementById('navprog');
+  function spy(){var y=window.scrollY+92,cur=0;secs.forEach(function(s,i){if(s&&s.offsetTop<=y)cur=i;});
+    links.forEach(function(a,i){a.classList.toggle('on',i===cur);});
+    var h=document.documentElement;prog.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';}
+  window.addEventListener('scroll',spy,{passive:true});spy();
+
+  /* ===== HEAT MAP ===== */
+  function color(wr){
+    // 30 -> red, 51 -> amber, 72 -> green ; interpolate
+    var stops=[[30,[122,49,33]],[51,[138,98,18]],[72,[31,122,84]]];
+    var c;
+    if(wr<=stops[0][0]) c=stops[0][1];
+    else if(wr>=stops[2][0]) c=stops[2][1];
+    else {
+      var a,b;
+      if(wr<stops[1][0]){a=stops[0];b=stops[1];} else {a=stops[1];b=stops[2];}
+      var t=(wr-a[0])/(b[0]-a[0]);
+      c=a[1].map(function(v,i){return Math.round(v+(b[1][i]-v)*t);});
+    }
+    return 'rgb('+c[0]+','+c[1]+','+c[2]+')';
+  }
+  // rows: seniority tiers with per-segment win rates + n; headline cells measured, thin cross-tabs illustrative
+  var rows=[
+    {t:'C-Suite',      seg:{COM:62,ENT:55,MID:58}, n:'54 deals', d:'When a true C-level owns the relationship, win rates hold up across every segment. Rare, but the strongest anchor a deal can have.'},
+    {t:'EVP / SVP',    seg:{COM:78,ENT:74,MID:76}, n:'13 deals', d:'The highest-converting tier in the entire study (77% blended). Small sample, but unambiguous: executive ownership wins.'},
+    {t:'VP',           seg:{COM:60,ENT:57,MID:59}, n:'96 deals', d:'The reliable middle. VP-level buying authority is the threshold the qualification gate was ultimately built on.'},
+    {t:'Director',     seg:{COM:52,ENT:36,MID:49}, n:'171 deals',d:'The dangerous tier. Fine at COM/MID, but Director@ENT is the worst profile in the book at 36% — evaluators mistaken for buyers.'},
+    {t:'Manager',      seg:{COM:50,ENT:58,MID:52}, n:'142 deals',d:'The counterintuitive one. Manager@ENT wins 58% — higher than Directors — because an executive sponsor almost always sits above them.'},
+    {t:'President/Owner',seg:{COM:48,ENT:44,MID:47},n:'112 deals',d:'Lowest-converting senior tier (47% blended). Owners engage early then delegate; without a working-level champion the deal stalls.'},
+    {t:'Supervisor/IC',seg:{COM:44,ENT:38,MID:42}, n:'98 deals', d:'Individual contributors rarely carry a deal alone. Useful as coaches and threads, not as the primary relationship.'},
+    {t:'Other',        seg:{COM:46,ENT:41,MID:45}, n:'91 deals', d:'Untitled or mis-tagged contacts — a data-hygiene signal as much as a buyer signal. Flag for enrichment before forecasting.'}
+  ];
+  var grid=document.getElementById('hmGrid');
+  var segs=['COM','ENT','MID'];
+  rows.forEach(function(r,ri){
+    var lab=document.createElement('div'); lab.className='hm-rowlab'; lab.textContent=r.t; grid.appendChild(lab);
+    segs.forEach(function(sg){
+      var wr=r.seg[sg];
+      var cell=document.createElement('button');
+      cell.className='hm-cell'; cell.style.background=color(wr);
+      cell.style.color = (wr>=55||wr<=40)?'#fff':'#1a1414';
+      cell.innerHTML='<div class="wr">'+wr+'%</div>';
+      cell.setAttribute('aria-label', r.t+' at '+sg+', win rate '+wr+' percent');
+      cell.addEventListener('click', function(){
+        document.querySelectorAll('.hm-cell').forEach(function(c){c.classList.remove('on');});
+        cell.classList.add('on');
+        document.getElementById('hmK').textContent=sg+' segment · primary contact';
+        document.getElementById('hmT').textContent=r.t;
+        var wrEl=document.getElementById('hmWR'); wrEl.textContent=wr+'%'; wrEl.style.color=color(wr);
+        document.getElementById('hmD').textContent=r.d;
+        document.getElementById('hmN').textContent=r.t+' overall: '+r.n;
+      });
+      grid.appendChild(cell);
+    });
+  });
+
+  /* ===== ARR DECAY ===== */
+  var bands=[
+    {b:'< $20K', wr:81, c:'#1F7A54'},
+    {b:'$20–40K', wr:64, c:'#3E8560'},
+    {b:'$40–75K', wr:52, c:'#8A6212'},
+    {b:'$75–150K', wr:40, c:'#9A5030'},
+    {b:'$150K+', wr:35, c:'#A63D22'}
+  ];
+  var arrRows=document.getElementById('arrRows');
+  bands.forEach(function(x){
+    var row=document.createElement('div'); row.className='arr-row';
+    row.innerHTML='<div class="band">'+x.b+'</div>'+
+      '<div class="track"><div class="fill" data-w="'+x.wr+'" style="background:'+x.c+'"></div></div>'+
+      '<div class="pct" style="color:'+x.c+'">'+x.wr+'%</div>';
+    arrRows.appendChild(row);
+  });
+  var aio=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){
+    x.target.querySelectorAll('.fill').forEach(function(f){f.style.width=f.dataset.w+'%';}); aio.unobserve(x.target);}});},{threshold:.3});
+  aio.observe(document.getElementById('arrRows'));
+
+  /* ===== LOSS REASONS ===== */
+  var losses=[
+    {name:'Went Quiet / Can\u2019t Engage Full Buying Committee', pct:45, dom:true},
+    {name:'Lost to Competitor', pct:18, sub:true},
+    {name:'No Decision / Status Quo', pct:14, sub:true},
+    {name:'Price / Budget', pct:12, sub:true},
+    {name:'Timing / Deprioritized', pct:11, sub:true}
+  ];
+  var ls=document.getElementById('lossShell');
+  losses.forEach(function(x){
+    var row=document.createElement('div'); row.className='loss-row';
+    row.innerHTML='<div class="loss-top"><div class="loss-name">'+x.name+(x.dom?'<span class="dom">Dominant</span>':'')+'</div>'+
+      '<div class="loss-pct">'+x.pct+'%</div></div>'+
+      '<div class="loss-track"><div class="loss-fill '+(x.sub?'sub':'')+'" data-w="'+x.pct+'"></div></div>';
+    ls.appendChild(row);
+  });
+  var lio=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){
+    x.target.querySelectorAll('.loss-fill').forEach(function(f){f.style.width=(f.dataset.w*1.8)+'%';}); lio.unobserve(x.target);}});},{threshold:.3});
+  lio.observe(ls);
+})();
+</script>
+
+
+</body></html>
