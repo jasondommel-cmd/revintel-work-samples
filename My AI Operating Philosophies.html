@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EEF1F5">
+<title>My AI Operating Philosophy | Jason Dommel</title>
+<meta name="description" content="I timed an AI agent against myself in a production Salesforce org. Then I built the rule that decides what goes to the model. A RevOps case study by Jason Dommel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F5; --card:#F8FAFC; --ink:#111B33; --ink2:#1E2C4C;
+  --muted:#56637E; --faint:#8A94AB;
+  --rule:#CFD6E2; --rule-soft:#DFE4EC;
+  --ai:#12856A; --ai-bright:#1FB891; --ai-soft:#DCEEE8;
+  --no:#A63D22; --no-soft:#F4E2DB;
+  --hold:#8A6212; --hold-soft:#F1E8D4;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;color-scheme:light only;background:var(--paper);-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+/* Some in-app browsers force a dark theme. Every band below paints its own
+   light background so nothing can fall through to a host-injected black. */
+header,section,nav,footer,div,p,h1,h2,h3{color:var(--ink)}
+.masthead,section,footer{background:var(--paper)}
+@media (prefers-color-scheme: dark){
+  html,body{background:var(--paper)!important;color:var(--ink)!important}
+  .masthead,section,footer{background:var(--paper)!important}
+  .verdict,.take{background:var(--card)!important}
+  .topnav{background:var(--card)!important}
+  h1,h2,h3,p,.dek,.q-verdict,.r-title{color:var(--ink)!important}
+  .dek,.q-note,.note,.tk p,.cov-read,.v-cell .lab{color:var(--muted)!important}
+  .eyebrow,.byline,.bar-lab,.sec-head .meta,.sec-head .no{color:var(--muted)!important}
+  .quad,.ef,.readout,.cov,.seg,.chip{background:var(--card)!important}
+  .ef.wide{background:var(--ai-soft)!important}
+  .mx-rule{background:var(--ai-soft)!important}
+  .quad.lit{background:var(--qs)!important}
+  .chip.on{background:var(--ai)!important;color:#fff!important}
+  .seg button.on{background:var(--ai)!important;color:#fff!important}
+  h1 .hl,.brand span,.navlinks a.on,.tk .n,.take .eyebrow{color:var(--ai)!important}
+  .v-cell .num{color:var(--ai)!important}
+  .v-cell .num.warm{color:var(--no)!important}
+  .bar-fill span{color:#fff!important}
+}
+.mono{font-family:'IBM Plex Mono',monospace}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+.rv{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *{transition:none!important;animation:none!important}
+  .rv{opacity:1;transform:none}
+}
+
+/* nav */
+.topnav{position:sticky;top:0;z-index:50;background:rgba(248,250,252,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.topnav .wrap{display:flex;align-items:center;gap:22px;height:52px}
+.brand{font-family:'Archivo',sans-serif;font-weight:900;font-size:13px;letter-spacing:.06em;color:var(--ink);text-transform:uppercase;white-space:nowrap}
+.brand span{color:var(--ai)}
+.navlinks{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks button{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;padding:6px 11px;white-space:nowrap;cursor:pointer}
+.navlinks button.on{color:var(--ai);border-bottom-color:var(--ai)}
+.navlinks button:hover{color:var(--ink)}
+.navlinks button:focus-visible{outline:2px solid var(--ai);outline-offset:-2px}
+
+/* masthead */
+.masthead{border-bottom:2px solid var(--ink);padding:46px 0 30px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.eyebrow .dot{color:var(--faint)}
+h1{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(30px,5.4vw,56px);line-height:1.02;letter-spacing:-.015em;text-transform:uppercase;max-width:19ch}
+h1 .hl{color:var(--ai)}
+.dek{margin-top:18px;max-width:64ch;font-size:17px;color:var(--muted)}
+.dek b{color:var(--ink);font-weight:600}
+.byline{margin-top:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+
+/* read badge */
+.readtime{display:inline-flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ai);border:1px solid var(--ai);padding:5px 10px;margin-bottom:16px}
+.readtime .pip{width:6px;height:6px;border-radius:50%;background:var(--ai)}
+
+/* contents index */
+.contents{background:var(--card);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:30px 0 34px}
+.contents .lede{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(15px,2.2vw,19px);text-transform:uppercase;letter-spacing:-.005em;margin-bottom:6px}
+.contents .lede em{font-style:normal;color:var(--ai)}
+.contents .sub{font-size:14.5px;color:var(--muted);max-width:68ch;margin-bottom:22px}
+.toc{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:860px){.toc{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.toc{grid-template-columns:1fr}}
+.toc button{display:block;width:100%;text-align:left;font:inherit;cursor:pointer;background:#fff;border:1px solid var(--rule);border-top:3px solid var(--tc,var(--ai));padding:14px 15px 15px;transition:transform .18s,box-shadow .18s,border-color .18s}
+.toc button:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(17,27,51,.09);border-color:var(--tc,var(--ai))}
+.toc button:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.toc .n{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:var(--tc,var(--ai));margin-bottom:8px}
+.toc h4{font-family:'Archivo',sans-serif;font-weight:800;font-size:13.5px;text-transform:uppercase;letter-spacing:.005em;line-height:1.24;color:var(--ink);margin-bottom:7px}
+.toc p{font-size:12.5px;color:var(--muted);line-height:1.48;margin:0;max-width:none}
+
+/* verdict band */
+.verdict{background:var(--card);border-bottom:1px solid var(--rule);padding:26px 0}
+.verdict .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
+.v-cell{border-top:3px solid var(--ai);padding-top:13px}
+.v-cell.warm{border-top-color:var(--no)}
+.v-cell .num{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(26px,3.6vw,38px);line-height:1;letter-spacing:-.015em;font-variant-numeric:tabular-nums;color:var(--ai)}
+.v-cell .num.warm{color:var(--no)}
+.v-cell .lab{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-top:8px;line-height:1.45}
+@media(max-width:820px){.verdict .wrap{grid-template-columns:repeat(2,1fr);gap:20px}}
+
+/* sections */
+section{padding:56px 0 10px;scroll-margin-top:64px}
+.sec-head{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:26px}
+.sec-head .no{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint);letter-spacing:.1em}
+.sec-head h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(19px,3vw,28px);letter-spacing:-.01em;text-transform:uppercase}
+.sec-head .meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+p{max-width:70ch;margin-bottom:16px}
+p b{font-weight:600}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--rule);padding-left:14px;max-width:66ch;margin-bottom:16px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+@media(max-width:820px){.cols{grid-template-columns:1fr}}
+
+/* provenance tags */
+.tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.11em;padding:3px 7px;white-space:nowrap;border:1px solid currentColor;text-transform:uppercase}
+.t-crm{color:#2A5FA8} .t-obs{color:var(--ai)} .t-rep{color:var(--hold)} .t-out{color:var(--no)}
+
+/* the race */
+.race{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--ink);padding:26px 24px;margin-bottom:26px}
+.race h3{font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
+.race .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:20px}
+.bar-row{display:grid;grid-template-columns:112px 1fr;gap:14px;align-items:center;margin-bottom:12px}
+.bar-lab{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);letter-spacing:.05em}
+.bar-track{background:var(--rule-soft);height:34px;position:relative;overflow:hidden}
+.bar-fill{height:100%;width:0;transition:width 1.1s cubic-bezier(.22,.75,.3,1);display:flex;align-items:center;justify-content:flex-end;padding-right:11px}
+.bar-fill.me{background:var(--ai)}
+.bar-fill.agent{background:var(--no)}
+.bar-fill span{font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;color:#fff}
+.race .verdict-line{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule);font-size:15px;color:var(--ink);max-width:70ch}
+.race .verdict-line b{color:var(--ai);font-weight:600}
+
+/* ===== MATRIX ===== */
+.matrix-intro{max-width:70ch;margin-bottom:22px}
+.mx{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:26px;align-items:start;margin-bottom:10px}
+@media(max-width:900px){.mx{grid-template-columns:1fr}}
+.mx-stage{position:relative;padding:0 0 30px 34px}
+.mx-grid{position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;aspect-ratio:1/.92;min-height:330px}
+.quad{border:1px solid var(--rule);background:var(--card);padding:13px 14px;position:relative;transition:border-color .25s,background .25s,box-shadow .25s}
+.quad .q-verdict{font-family:'Archivo',sans-serif;font-weight:800;font-size:13.5px;line-height:1.28;text-transform:uppercase;letter-spacing:.01em;margin-bottom:6px}
+.quad .q-note{font-size:12.5px;color:var(--muted);line-height:1.45}
+.quad.lit{box-shadow:0 0 0 2px var(--qc) inset;background:var(--qs);border-color:var(--qc)}
+.quad.lit .q-verdict{color:var(--qc)}
+.quad .pin{position:absolute;right:11px;bottom:10px;width:9px;height:9px;border-radius:50%;background:var(--qc);opacity:0;transform:scale(.4);transition:opacity .3s,transform .3s}
+.quad.lit .pin{opacity:1;transform:scale(1)}
+.ax{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+.ax-y{left:-2px;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl}
+.ax-x{left:34px;right:0;bottom:6px;display:flex;justify-content:space-between}
+.ax-ylab{position:absolute;left:14px;top:0;bottom:30px;display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);writing-mode:vertical-rl;transform:rotate(180deg)}
+
+.mx-side .picker-lab{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:8px 12px;border:1px solid var(--rule);background:var(--card);cursor:pointer;color:var(--muted);border-radius:2px;transition:all .18s;text-align:left}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip.on{background:var(--ai);border-color:var(--ai);color:#fff;font-weight:500}
+.chip:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.readout{border:1px solid var(--rule);border-left:3px solid var(--rc,var(--rule));background:var(--card);padding:17px 18px;min-height:172px}
+.readout .r-title{font-family:'Archivo',sans-serif;font-weight:800;font-size:15.5px;margin-bottom:9px;line-height:1.3}
+.readout .r-meta{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--rc,var(--muted));margin-bottom:11px}
+.readout .r-body{font-size:13.5px;color:var(--ink);line-height:1.58;margin-bottom:10px}
+.readout .r-ev{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);line-height:1.55;border-top:1px dashed var(--rule);padding-top:10px}
+.mx-rule{background:var(--ai-soft);border:1px solid var(--ai);border-left:5px solid var(--ai);padding:22px 24px;margin-top:6px}
+.mx-rule .lab{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ai);margin-bottom:10px}
+.mx-rule .txt{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(16px,2.5vw,22px);line-height:1.34;max-width:38ch;color:var(--ink)}
+.mx-rule .txt .u{color:var(--ai)}
+
+/* evidence files */
+.ev-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.ev-grid{grid-template-columns:1fr}}
+.ef{background:var(--card);border:1px solid var(--rule);position:relative;transition:border-color .2s,box-shadow .2s}
+.ef:hover{border-color:var(--ink)}
+.ef.wide{grid-column:1/-1;border-color:var(--ai);background:var(--ai-soft)}
+.ef button.head{all:unset;display:block;width:100%;padding:17px 18px 14px;cursor:pointer;box-sizing:border-box}
+.ef button.head:focus-visible{outline:2px solid var(--ai);outline-offset:-2px}
+.ef .stamp{position:absolute;top:14px;right:14px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.12em;padding:3px 7px;pointer-events:none;border:1px solid currentColor}
+.ef .stamp.built{color:var(--ai)}
+.ef .stamp.crm{color:#2A5FA8}
+.ef h3{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;margin-bottom:7px;padding-right:104px;line-height:1.3}
+.ef .why{font-size:13.5px;line-height:1.55;color:var(--ink)}
+.ef .open-hint{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:var(--faint);margin-top:12px;text-transform:uppercase}
+.ef .open-hint::before{content:"+ ";color:var(--ai)}
+.ef.open .open-hint::before{content:"\2212 "}
+.ef .body{max-height:0;overflow:hidden;transition:max-height .38s ease}
+.ef.open .body{max-height:420px}
+.ef .body-inner{padding:0 18px 16px;border-top:1px dashed var(--rule);padding-top:13px}
+.ef .detail{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:9px}
+.ef .detail b{color:var(--ink);font-weight:600}
+
+/* canon: sources -> projects */
+.canon-panel{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--ai);padding:24px;margin-bottom:24px}
+.canon-lab{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.srcs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px}
+@media(max-width:760px){.srcs{grid-template-columns:repeat(2,1fr)}}
+.src{background:#fff;border:1px solid var(--rule);border-left:3px solid var(--ai);padding:12px 13px}
+.src .t{font-family:'Archivo',sans-serif;font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.02em;line-height:1.25;margin-bottom:5px}
+.src .d{font-size:12px;color:var(--muted);line-height:1.45}
+.funnel{display:flex;align-items:center;gap:12px;margin:16px 0 14px}
+.funnel .ln{flex:1;height:1px;background:var(--rule)}
+.funnel .mid{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ai);border:1px solid var(--ai);padding:5px 11px;white-space:nowrap}
+.projs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:760px){.projs{grid-template-columns:1fr}}
+.proj{background:var(--ai-soft);border:1px solid var(--ai);padding:13px 14px}
+.proj .t{font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.02em;margin-bottom:6px;color:var(--ink)}
+.proj .d{font-size:12.5px;color:var(--ink);line-height:1.5}
+.lockrow{margin-top:16px;padding-top:14px;border-top:1px dashed var(--rule);font-size:13.5px;color:var(--ink);max-width:74ch}
+.lockrow b{color:var(--ai);font-weight:600}
+
+/* coverage */
+.cov{background:var(--card);border:1px solid var(--rule);padding:24px;margin-bottom:24px}
+.cov-head{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cov-head h3{font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.03em}
+.seg{display:inline-flex;border:1px solid var(--rule);background:#fff}
+.seg button{font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:transparent;border:none;border-right:1px solid var(--rule);padding:8px 14px;cursor:pointer;color:var(--muted)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--ai);color:#fff;font-weight:500}
+.seg button:focus-visible{outline:2px solid var(--ai);outline-offset:-2px}
+.dots{display:grid;grid-template-columns:repeat(40,1fr);gap:3px;margin-bottom:14px}
+@media(max-width:640px){.dots{grid-template-columns:repeat(25,1fr)}}
+.dot{aspect-ratio:1;border-radius:50%;background:var(--rule-soft);transition:background .35s}
+.dot.on{background:var(--ai-bright)}
+.cov-read{font-size:14px;color:var(--muted);max-width:72ch}
+.cov-read b{color:var(--ink);font-weight:600}
+
+/* takeaways */
+.take{background:var(--card);border-top:2px solid var(--ink);border-bottom:1px solid var(--rule);padding:44px 0 48px;margin-top:44px}
+.take .eyebrow{color:var(--ai)}
+.take h2{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(22px,3.4vw,32px);text-transform:uppercase;letter-spacing:-.01em;margin-bottom:26px}
+.take-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:820px){.take-grid{grid-template-columns:1fr}}
+.tk{border-top:3px solid var(--ai);padding-top:15px}
+.tk .n{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--ai);margin-bottom:9px}
+.tk h3{font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;line-height:1.28;margin-bottom:9px}
+.tk p{font-size:14px;color:var(--muted);line-height:1.6;margin:0;max-width:none}
+
+footer{padding:30px 0 46px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);letter-spacing:.05em}
+footer .r{display:flex;gap:18px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">AI OPERATING <span>PHILOSOPHY</span></div>
+    <div class="navlinks">
+      <button type="button" data-go="test">01 The Race</button>
+      <button type="button" data-go="matrix">02 The Matrix</button>
+      <button type="button" data-go="corpus">03 The Corpus</button>
+      <button type="button" data-go="canon">04 The Canon</button>
+      <button type="button" data-go="shipped">05 What Shipped</button>
+      <button type="button" data-go="limits">06 What I Won't Claim</button>
+    </div>
+  </div>
+</nav>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>RevOps Case Study</span><span class="dot">&middot;</span>
+      <span>My AI Operating Philosophy</span><span class="dot">&middot;</span>
+      <span>Jason Dommel</span>
+    </div>
+    <div class="readtime mono"><span class="pip"></span>Six rules &middot; about a three-minute read</div>
+    <h1>Six Rules for AI in a Revenue Engine. <span class="hl">Each One Cost Me Something.</span></h1>
+    <p class="dek">This is not a tour of a tech stack. It's how I decide what goes to a model, what
+    stays with a person, and what I refuse to claim credit for &mdash; drawn from one production
+    revenue org, <b>31,000 call transcripts</b>, and a build I ran twice to see which way was faster.
+    Every number is labeled by how it is known.</p>
+    <div class="byline">
+      <span>Revenue Operations</span>
+      <span>Written for founders, CROs and CGOs evaluating an operator, not a tool</span>
+    </div>
+  </div>
+</header>
+
+<div class="contents">
+  <div class="wrap">
+    <div class="lede">What you&rsquo;ll get out of the next three minutes &mdash; <em>six things</em></div>
+    <p class="sub">Each section is one rule and the evidence behind it. Jump straight to any of them.</p>
+    <div class="toc">
+      <button type="button" data-go="test" style="--tc:var(--no)">
+        <div class="n mono">01</div>
+        <h4>I beat the agent by ten hours</h4>
+        <p>The one build I ran twice. Five hours by hand, fifteen with the agent &mdash; and why winning is not an argument against AI.</p>
+      </button>
+      <button type="button" data-go="matrix" style="--tc:var(--ink)">
+        <div class="n mono">02</div>
+        <h4>The rule that came out of it</h4>
+        <p>An interactive matrix placing eight real workloads. Two questions decide whether work goes to a model or a person.</p>
+      </button>
+      <button type="button" data-go="corpus" style="--tc:var(--ai)">
+        <div class="n mono">03</div>
+        <h4>The archive nobody queries</h4>
+        <p>31,000 transcripts treated as a research corpus instead of a coaching tool, and the five artifacts that came out.</p>
+      </button>
+      <button type="button" data-go="canon" style="--tc:var(--ai)">
+        <div class="n mono">04</div>
+        <h4>One canon, everyone queries it</h4>
+        <p>Four company-wide data sources, locked into read-only AI projects. The opposite of handing fifty people a chatbot.</p>
+      </button>
+      <button type="button" data-go="shipped" style="--tc:var(--ai)">
+        <div class="n mono">05</div>
+        <h4>What actually shipped</h4>
+        <p>Coverage ceilings, outbound volume, forecast variance. What changed in the record, not in a deck.</p>
+      </button>
+      <button type="button" data-go="limits" style="--tc:var(--hold)">
+        <div class="n mono">06</div>
+        <h4>What I won&rsquo;t claim</h4>
+        <p>Where I scope AI out entirely, and the two builds running in production that I don't get to put a number on.</p>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="verdict">
+  <div class="wrap">
+    <div class="v-cell warm"><div class="num warm">3&times;</div><div class="lab">Longer with the agent<br>than by hand</div></div>
+    <div class="v-cell"><div class="num">31K+</div><div class="lab">Call transcripts turned<br>into an operating asset</div></div>
+    <div class="v-cell"><div class="num">109</div><div class="lab">Sales plays built from<br>observed win patterns</div></div>
+    <div class="v-cell"><div class="num">~9 &rarr; 71</div><div class="lab">Outbound-sourced opps<br>per quarter, then in two months</div></div>
+  </div>
+</div>
+
+<section id="test" class="rv">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="no mono">01</span>
+      <h2>Rule One: I Beat the Agent. That Wasn&rsquo;t the Point.</h2>
+      <span class="meta">Production Salesforce org</span>
+    </div>
+    <p>One build, run twice, is the cheapest experiment in this whole piece &mdash; and it produced the rule everything else hangs on. The build: a trade-show attribution system. Two custom objects, roughly thirty properties,
+    the automations, the reporting. I had done this kind of work in this org before, so I knew the
+    landmines. I built it by hand, then ran the same build with an AI agent and watched every step.</p>
+
+    <div class="race">
+      <h3>Same build. Same org. Same scope.</h3>
+      <div class="sub">Observed, start to finish &middot; agent proposed configuration, no unapproved writes to production</div>
+      <div class="bar-row">
+        <div class="bar-lab">BY HAND</div>
+        <div class="bar-track"><div class="bar-fill me" data-w="33"><span>5 hrs</span></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-lab">WITH AGENT</div>
+        <div class="bar-track"><div class="bar-fill agent" data-w="100"><span>15 hrs</span></div></div>
+      </div>
+      <div class="verdict-line">The agent was not wrong, and it was not incapable. It was
+      <b>thorough</b> &mdash; pausing at every step to validate the environment and determine where to go
+      next. I skipped that entirely, because I already knew where to go. The ten-hour gap wasn't a
+      capability gap. It was the cost of discovery I had already paid.</div>
+    </div>
+
+    <p class="note">Worth stating plainly: I kept the constraint that made it slower. The agent proposed
+    configuration and never wrote to production without my approval. Speed recovered from an agent with
+    write access to a live org is borrowed against an incident nobody has had yet.</p>
+
+    <p>The obvious conclusion &mdash; <i>AI can't architect a CRM</i> &mdash; is the wrong one. Invert the
+    conditions and the same exhaustive behavior becomes the reason to use it. In an org where the flows
+    are undocumented and nobody left a diagram, turning over every stone is not waste. It's the job.</p>
+    <p><b>So the deciding variable isn't the task. It's whether verification is redundant with knowledge
+    already in the room.</b> That question has a second half, because some work is judgment-dense no
+    matter who holds the context. Put both on axes and you get a placement rule.</p>
+  </div>
+</section>
+
+<section id="matrix" class="rv">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="no mono">02</span>
+      <h2>Rule Two: The Allocation Matrix</h2>
+      <span class="meta">Click a workload</span>
+    </div>
+    <p class="matrix-intro">Deciding where AI goes is capacity planning, not a technology question.
+    I don't ask whether the model <i>can</i> do the task. I ask who is fastest at it &mdash; me, an analyst,
+    or the model &mdash; and what the other two run in parallel. Two questions place the work.</p>
+
+    <div class="mx">
+      <div class="mx-stage">
+        <div class="ax-ylab"><span>Routine call</span><span>Judgment-dense</span></div>
+        <div class="mx-grid">
+          <div class="quad" id="q-hj-hc" style="--qc:var(--hold);--qs:var(--hold-soft)">
+            <div class="q-verdict">Human decides.<br>AI prepares the file.</div>
+            <div class="q-note">Context is held and the call is subjective. The model assembles evidence; a person rules.</div>
+            <div class="pin"></div>
+          </div>
+          <div class="quad" id="q-hj-lc" style="--qc:var(--ai);--qs:var(--ai-soft)">
+            <div class="q-verdict">AI surfaces the evidence.<br>Human makes the call.</div>
+            <div class="q-note">Nobody holds the pattern and the stakes are real. Coverage first, judgment last.</div>
+            <div class="pin"></div>
+          </div>
+          <div class="quad" id="q-lj-hc" style="--qc:var(--no);--qs:var(--no-soft)">
+            <div class="q-verdict">Do it yourself.<br>Give AI something else.</div>
+            <div class="q-note">You are faster than the discovery tax. Run the model in parallel on work you can't do at once.</div>
+            <div class="pin"></div>
+          </div>
+          <div class="quad" id="q-lj-lc" style="--qc:var(--ai);--qs:var(--ai-soft)">
+            <div class="q-verdict">Hand it to the agent.<br>Exhaustiveness is the point.</div>
+            <div class="q-note">Rationed by analyst-hours until now. This is where coverage compounds.</div>
+            <div class="pin"></div>
+          </div>
+        </div>
+        <div class="ax ax-x mono"><span>Context is held</span><span>Nobody holds the map</span></div>
+      </div>
+
+      <div class="mx-side">
+        <div class="picker-lab">Real workloads &middot; where each one landed</div>
+        <div class="chips" id="chips"></div>
+        <div class="readout" id="readout"></div>
+      </div>
+    </div>
+
+    <div class="mx-rule">
+      <div class="lab">The rule</div>
+      <div class="txt">An agent&rsquo;s thoroughness is <span class="u">waste</span> where the knowledge is
+      already in the room, and <span class="u">insurance</span> where nobody holds the map.</div>
+    </div>
+  </div>
+</section>
+
+<section id="corpus" class="rv">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="no mono">03</span>
+      <h2>Rule Three: The Archive Is the Asset</h2>
+      <span class="meta">Open any file</span>
+    </div>
+    <p>Nearly every company that owns conversation intelligence uses it to spot-check reps. The
+    recordings are something else: a longitudinal record of what buyers actually said, the largest
+    qualitative dataset most revenue organizations own, and the one they almost never query.</p>
+    <p><b>I treated 31,000+ transcripts as a research corpus and built the pipeline to query it</b> &mdash;
+    Databricks and Claude for pattern analysis at scale, with cluster analysis on targeted call sets.
+    Bottom-left quadrant: nobody held that pattern, and the work had been rationed by analyst-hours
+    since the day the tool was bought. Everything below came out of that one asset.</p>
+
+    <div class="ev-grid">
+      <div class="ef wide">
+        <button class="head" aria-expanded="false">
+          <span class="stamp mono built">BUILT &middot; NOT MINE TO CLAIM</span>
+          <h3>A churn-risk model that cited the customer&rsquo;s own words</h3>
+          <div class="why">Churn models usually get ignored because nobody trusts the inputs. This one
+          paired quantitative churn signals with the language customers actually used on calls &mdash;
+          concrete reasons, not a score.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">Delivered to Customer Support as evidence, not as a dashboard. The
+          argument was auditable: every risk signal traced to a moment in a recorded conversation.</div>
+          <div class="detail"><b>Where it stands:</b> in evaluation, with a good part of it committed
+          for adoption. Then my role and the Chief Customer Officer's were both eliminated in a
+          restructuring. I have no outcome number and I won't borrow one.</div>
+        </div></div>
+      </div>
+
+      <div class="ef">
+        <button class="head" aria-expanded="false">
+          <h3>109 sales plays</h3>
+          <div class="why">Built for existing customers where the new platform core was in play,
+          grounded in observed win patterns rather than opinion.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">Pattern mining across the corpus isolated what recurred in deals that
+          progressed. Plays were written to the pattern, not to a framework someone liked.</div>
+          <div class="detail"><b>Why it matters:</b> a play grounded in what actually happened survives
+          the first rep who says "that's not how my deals go."</div>
+        </div></div>
+      </div>
+
+      <div class="ef">
+        <button class="head" aria-expanded="false">
+          <h3>Win/loss intelligence with citations</h3>
+          <div class="why">The qualitative substance underneath the quantitative record: primary,
+          secondary and tertiary loss reasons, each cited to a timestamp in the call.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">A closed-lost field tells you a deal died. It rarely tells you why in a
+          way anyone can act on. Structured loss analysis with call evidence turns a category into an
+          argument you can take to product or pricing.</div>
+          <div class="detail"><b>In the record:</b> 79 opportunities carry structured AI lost-reason
+          analysis with timestamped evidence.</div>
+        </div></div>
+      </div>
+
+      <div class="ef">
+        <button class="head" aria-expanded="false">
+          <h3>Competitive intelligence, inside a hard ceiling</h3>
+          <div class="why">Named-competitor theme spotters and keyword trackers, engineered around a
+          20-slot tracker limit by reserving custom slots for custom questions.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">The platform capped trackers at twenty. Rather than spend all twenty on
+          competitor names, I reserved slots for the questions that actually needed answering and let
+          the theme spotters carry the rest.</div>
+          <div class="detail"><b>The general point:</b> most AI tooling has a constraint like this. The
+          work is designing inside it, not complaining about it.</div>
+        </div></div>
+      </div>
+
+      <div class="ef">
+        <button class="head" aria-expanded="false">
+          <span class="stamp mono crm">FROM THE CRM</span>
+          <h3>It landed in the record, not in a deck</h3>
+          <div class="why">228 opportunities carrying AI-generated notes, 79 with structured
+          lost-reason analysis, conversation coverage across all 732 opportunities on file.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">Intelligence that lives in a slide gets read once. This went into the
+          opportunity object, where reps and managers already work.</div>
+          <div class="detail"><b>Reproducible:</b> these counts come straight from the opportunity
+          history export and can be re-run against the same data.</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="canon" class="rv">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="no mono">04</span>
+      <h2>Rule Four: One Canon, Everyone Queries It</h2>
+      <span class="meta">Governed, read-only, multiplayer</span>
+    </div>
+    <p>Most AI enablement means handing fifty people a chatbot. Fifty private prompts, fifty different
+    answers, and no way to tell which one is right &mdash; so the org ends up less aligned than before
+    it had AI. <b>I built the opposite.</b></p>
+    <p>I assembled the company's canonical history into one governed library, then published it as a set
+    of locked AI projects. Users could query them. Users could not edit them. That constraint is the
+    entire design: the moment a rep can alter the project, the canon drifts and you are back to fifty
+    answers.</p>
+
+    <div class="canon-panel">
+      <div class="canon-lab">Four canonical sources &middot; the whole company&rsquo;s history in one place</div>
+      <div class="srcs">
+        <div class="src"><div class="t">Every opportunity</div><div class="d">The complete Salesforce record the company had ever produced.</div></div>
+        <div class="src"><div class="t">Every closed case</div><div class="d">The full customer support history, not a sample.</div></div>
+        <div class="src"><div class="t">Every production output</div><div class="d">Actual customer transaction volume from the platform.</div></div>
+        <div class="src"><div class="t">Everything on the competition</div><div class="d">Scattered competitive knowledge consolidated into one source.</div></div>
+      </div>
+
+      <div class="funnel">
+        <div class="ln"></div>
+        <div class="mid mono">Locked projects &middot; query, don&rsquo;t edit</div>
+        <div class="ln"></div>
+      </div>
+
+      <div class="projs">
+        <div class="proj"><div class="t">Win / Loss</div><div class="d">Any AE, any period, sliced by ICP. Reps learn from their losses on their own time instead of waiting for a QBR to tell them.</div></div>
+        <div class="proj"><div class="t">Support History</div><div class="d">Closed cases merged with opportunity data and platform production volume &mdash; so a question about an account returns its whole story, not one system's view.</div></div>
+        <div class="proj"><div class="t">Competitive</div><div class="d">Anything competitor-related, answered from what the company actually knew rather than what the loudest rep believed.</div></div>
+      </div>
+
+      <div class="lockrow">Read-only is not a limitation here. It is the feature. <b>One source, many
+      questions, the same answer for everyone who asks.</b></div>
+    </div>
+
+    <p>The result was a learning center rather than a tool. <b>It eliminated conjecture.</b> Questions
+    that used to be settled by whoever spoke with the most confidence &mdash; why we lose to that
+    competitor, whether this account has had trouble before, what actually happens after a customer goes
+    live &mdash; became lookups against a shared record.</p>
+    <p class="note">This is the principle underneath both this rule and the transcript work:
+    <b>build a governed environment on trusted data, then broadcast intelligence that can't be found
+    anywhere else in the company.</b> The AI is the interface. The canon is the asset, and the
+    governance is what makes anyone trust the answer.</p>
+  </div>
+</section>
+
+<section id="shipped" class="rv">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="no mono">05</span>
+      <h2>Rule Five: Coverage, Not Cleverness</h2>
+      <span class="meta">Coverage, not cleverness</span>
+    </div>
+    <p>The gain is almost never that AI decides better. It's that everything gets inspected instead of
+    the fraction a person had time for, and human attention moves to the calls that need a judgment.</p>
+
+    <div class="cov">
+      <div class="cov-head">
+        <h3>The research ceiling</h3>
+        <div class="seg" id="covseg">
+          <button data-n="50" class="on">Before</button>
+          <button data-n="200">With the research layer</button>
+        </div>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="cov-read" id="covread"></div>
+    </div>
+
+    <div class="ev-grid">
+      <div class="ef">
+        <button class="head" aria-expanded="false">
+          <span class="stamp mono crm">FROM THE CRM</span>
+          <h3>~9 per quarter, then 71 in two months</h3>
+          <div class="why">Outbound BDR-sourced new opportunities, worked against a newly built target
+          list I generated and cleansed with AI against the ICP and the AE rules of engagement.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">Trailing quarters ran 8, 13, 4 and 10. April and May 2026 produced 71.</div>
+          <div class="detail"><b>What I own:</b> the input. The execution belonged to an outsourced BDR
+          team whose capacity may also have changed in the same window, so I can't separate the two and
+          I'm not going to pretend otherwise. The list is mine; the quarter isn't.</div>
+        </div></div>
+      </div>
+
+      <div class="ef">
+        <button class="head" aria-expanded="false">
+          <span class="stamp mono built">BUILT &middot; NOT MINE TO CLAIM</span>
+          <h3>3,000 prospects, 100% hygiene at delivery</h3>
+          <div class="why">A Clay-built prospect universe carved from ICP criteria: market-signal
+          enrichment, intent enrichment, persona contacts, suppression against customers and open
+          pipeline, delivered into Salesforce.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">Agents amplify whatever data quality already exists. Hygiene and
+          suppression came before the intelligence work, not after it embarrassed someone.</div>
+          <div class="detail"><b>Where it stands:</b> in production and being worked right now. I left
+          before the results landed, so there is no outcome number here.</div>
+        </div></div>
+      </div>
+
+      <div class="ef">
+        <button class="head" aria-expanded="false">
+          <span class="stamp mono" style="color:var(--hold)">REPORTED BY USERS</span>
+          <h3>Post-call collateral: 90 minutes to 15</h3>
+          <div class="why">Transcript in, needs and pain extracted, approved content pulled, personalized
+          collateral drafted for AE review.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">What changed isn't time saved. It's that a tradeoff disappeared. At ninety
+          minutes, reps chose between something generic today and something good next week. At fifteen,
+          the choice is gone: it goes out while the call is still warm, tailored every time.</div>
+          <div class="detail"><b>Provenance:</b> the ninety-minute baseline is what AEs told me it took
+          to do it properly. Not instrumented.</div>
+        </div></div>
+      </div>
+
+      <div class="ef">
+        <button class="head" aria-expanded="false">
+          <span class="stamp mono crm">FROM THE CRM</span>
+          <h3>Forecast variance under 10%</h3>
+          <div class="why">Forecasting moved off AE-reported commit onto an evidence-based model updated
+          from transcript audits and opportunity data &mdash; at a company that had missed its number for
+          two and a half consecutive years.</div>
+          <div class="open-hint mono">Open file</div>
+        </button>
+        <div class="body"><div class="body-inner">
+          <div class="detail">Run alongside rep pipeline as a control, it surfaced unsupported risk
+          before board review rather than after.</div>
+          <div class="detail"><b>Across engagements:</b> a 24% average lift in forecast predictability
+          over seven PE-backed engagements, $10M to $300M+ ARR. That one is a cross-engagement average,
+          not a single-company result.</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="limits" class="rv">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="no mono">06</span>
+      <h2>Rule Six: Label What You Can&rsquo;t Claim</h2>
+      <span class="meta">The other half of the discipline</span>
+    </div>
+    <div class="cols">
+      <div>
+        <p><b>Deal desk stays human.</b> Approvals and validations carry an enormous amount of context
+        and subjectivity. AI is genuinely good at assembling an answer from disparate sources, and that
+        is not the same as making the right call in a sensitive situation. The thoroughness that makes
+        an agent valuable in research is exactly the wrong instinct at an approval gate, where the
+        judgment is about relationship, precedent and consequence rather than completeness.</p>
+        <p><b>Two builds are in production without me.</b> The 3,000-prospect universe is being worked
+        right now. The churn model was in evaluation with partial adoption committed when the
+        restructuring hit. Both are real; neither has an outcome I get to put a number on.</p>
+      </div>
+      <div>
+        <p><b>Attribution has limits and I mark them.</b> The outbound jump is tied to a list I built,
+        worked by a team I didn't manage. The research ceiling is my observation of how AEs worked, not
+        an instrumented metric. The collateral figure is what reps told me. Every one of those is
+        useful; none of them is the same kind of fact.</p>
+        <p class="note" style="margin-top:20px">Most AI claims in a hiring process are someone else's
+        outcome with a first-person verb in front of them. The labels on this page exist because the
+        distinction is the whole point &mdash; and because a claim you can defend under questioning is
+        worth more than a bigger one you can't.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="take">
+  <div class="wrap">
+    <div class="eyebrow">If you remember three things</div>
+    <h2>The Takeaways</h2>
+    <div class="take-grid">
+      <div class="tk">
+        <div class="n mono">01</div>
+        <h3>Allocation is capacity planning</h3>
+        <p>Not "can AI do this" but "who is fastest, and what runs in parallel." An agent's
+        thoroughness is waste where the knowledge is already in the room and insurance where nobody
+        holds the map. I have the timing data: five hours against fifteen.</p>
+      </div>
+      <div class="tk">
+        <div class="n mono">02</div>
+        <h3>Governed data beats clever prompts</h3>
+        <p>I build governed environments on trusted data and broadcast intelligence the company can't
+        get anywhere else. 31,000 transcripts read as a corpus. Four canonical sources published as
+        locked, queryable projects. Not fifty private chatbots &mdash; one canon, everyone querying it.</p>
+      </div>
+      <div class="tk">
+        <div class="n mono">03</div>
+        <h3>Label what you can&rsquo;t claim</h3>
+        <p>Two of the best things I built are in production without me, and I say so. Governance,
+        provenance and honest attribution aren't the disclaimer on AI work. They're the reason anyone
+        should believe the rest of it.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="r">
+      <span>Jason Dommel</span>
+      <span>Revenue Operations</span>
+      <span>RevOps Case Study</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* reveal + bar animation */
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(!e.isIntersecting) return;
+      e.target.classList.add('in');
+      e.target.querySelectorAll('.bar-fill').forEach(function(b){
+        b.style.width = b.getAttribute('data-w') + '%';
+      });
+      io.unobserve(e.target);
+    });
+  }, {threshold:.12});
+  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+
+  /* in-page scrolling without navigation (anchor hrefs get intercepted
+     as external links inside sandboxed viewers) */
+  document.querySelectorAll('[data-go]').forEach(function(b){
+    b.addEventListener('click', function(e){
+      e.preventDefault();
+      var t = document.getElementById(b.getAttribute('data-go'));
+      if(!t) return;
+      var y = t.getBoundingClientRect().top + window.scrollY - 60;
+      window.scrollTo({top:y, behavior: reduce ? 'auto' : 'smooth'});
+    });
+  });
+
+  /* nav highlight */
+  var links = [].slice.call(document.querySelectorAll('.navlinks button'));
+  var secs = links.map(function(b){ return document.getElementById(b.getAttribute('data-go')); });
+  function onScroll(){
+    var y = window.scrollY + 90, cur = 0;
+    secs.forEach(function(s,i){ if(s && s.offsetTop <= y) cur = i; });
+    links.forEach(function(b,i){ b.classList.toggle('on', i===cur); });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+
+  /* evidence files */
+  document.querySelectorAll('.ef .head').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var card = btn.closest('.ef');
+      var open = card.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+
+  /* ===== matrix ===== */
+  var WORK = [
+    { k:'Architecting a CRM I know', q:'q-lj-hc', c:'var(--no)',
+      verdict:'Do it yourself. Give AI something else.',
+      body:'Two objects, thirty properties, automations and reporting in an org whose landmines I already knew. Five hours by hand against fifteen with the agent.',
+      ev:'OBSERVED \u00b7 The agent paused to validate every step. I skipped the discovery it had to pay for.' },
+    { k:'Architecting an org nobody documented', q:'q-lj-lc', c:'var(--ai)',
+      verdict:'Hand it to the agent. Exhaustiveness is the point.',
+      body:'Same task, inverted conditions. Undocumented flows, no diagram, hidden automation. Turning over every stone stops being waste and becomes the deliverable.',
+      ev:'THE INVERSION \u00b7 Identical agent behavior. Opposite verdict. The task never changed \u2014 the context did.' },
+    { k:'Mining 31K call transcripts', q:'q-lj-lc', c:'var(--ai)',
+      verdict:'Hand it to the agent. Exhaustiveness is the point.',
+      body:'No human held the pattern across 31,000 conversations, and nobody ever would have. Rationed by analyst-hours since the day the tool was bought.',
+      ev:'SHIPPED \u00b7 109 sales plays, competitive reports, voice of customer, and the churn-risk model.' },
+    { k:'Building the target list', q:'q-lj-lc', c:'var(--ai)',
+      verdict:'Hand it to the agent. Exhaustiveness is the point.',
+      body:'3,000 ICP prospects carved out, signal and intent enrichment, persona contacts, suppression, 100% hygiene at delivery into Salesforce.',
+      ev:'FROM THE CRM \u00b7 Outbound-sourced opportunities went from ~9 a quarter to 71 across two months.' },
+    { k:'Account research before a call', q:'q-lj-lc', c:'var(--ai)',
+      verdict:'Hand it to the agent. Exhaustiveness is the point.',
+      body:'An AE could prepare roughly 50 accounts well. Past that the research collapsed and the sequencing went generic. The ceiling moved to about 200.',
+      ev:'OBSERVED \u00b7 The constraint is no longer analyst-hours. It is ICP quality and selling time.' },
+    { k:'\u201cHas this happened before?\u201d', q:'q-lj-lc', c:'var(--ai)',
+      verdict:'Hand it to the agent. Exhaustiveness is the point.',
+      body:'Every opportunity, every closed support case, every production output and all competitive knowledge \u2014 published as locked projects any AE or support rep could query without being able to edit them.',
+      ev:'GOVERNED \u00b7 One canon, many questions, the same answer for everyone. Conjecture eliminated.' },
+    { k:'Diagnosing why customers churn', q:'q-hj-lc', c:'var(--ai)',
+      verdict:'AI surfaces the evidence. Human makes the call.',
+      body:'The pattern lived across thousands of conversations nobody had read together. The model found it and cited it; what to do about it stayed a leadership decision.',
+      ev:'BUILT \u00b7 Quantitative signals evidenced by the customer\u2019s own language, delivered to Customer Support.' },
+    { k:'Contract & deal desk approvals', q:'q-hj-hc', c:'var(--hold)',
+      verdict:'Human decides. AI prepares the file.',
+      body:'Approvals carry enormous context and subjectivity. Assembling an answer from disparate sources is not the same as making the right call in a sensitive situation.',
+      ev:'SCOPED OUT \u00b7 The judgment is about relationship, precedent and consequence \u2014 not completeness.' },
+    { k:'Writing to a production org', q:'q-hj-hc', c:'var(--hold)',
+      verdict:'Human decides. AI prepares the file.',
+      body:'The agent proposed configuration and never wrote without approval. That constraint is part of why it was slower, and I would keep it anyway.',
+      ev:'GOVERNANCE \u00b7 Speed recovered from unapproved writes is borrowed against an incident nobody has had yet.' }
+  ];
+
+  var chips = document.getElementById('chips');
+  var readout = document.getElementById('readout');
+
+  function select(i){
+    document.querySelectorAll('.quad').forEach(function(q){ q.classList.remove('lit'); });
+    [].slice.call(chips.children).forEach(function(c,j){ c.classList.toggle('on', j===i); });
+    var w = WORK[i];
+    var quad = document.getElementById(w.q);
+    if(quad) quad.classList.add('lit');
+    readout.style.setProperty('--rc', w.c);
+    readout.innerHTML =
+      '<div class="r-meta mono">' + w.verdict + '</div>' +
+      '<div class="r-title">' + w.k + '</div>' +
+      '<div class="r-body">' + w.body + '</div>' +
+      '<div class="r-ev mono">' + w.ev + '</div>';
+  }
+
+  WORK.forEach(function(w,i){
+    var b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button'; b.textContent = w.k;
+    b.addEventListener('click', function(){ select(i); });
+    chips.appendChild(b);
+  });
+  select(0);
+
+  /* ===== coverage ===== */
+  var dots = document.getElementById('dots');
+  var covread = document.getElementById('covread');
+  for(var i=0;i<200;i++){ var d=document.createElement('div'); d.className='dot'; dots.appendChild(d); }
+  var dEls = [].slice.call(dots.children);
+  var COPY = {
+    50:'<b>Roughly 50 accounts.</b> That is what an AE could research and sequence properly at any one time. Beyond it, the prep collapsed \u2014 the outreach went generic, the signal went unread, and the account list stopped being a plan.',
+    200:'<b>About 200 accounts.</b> Same rep, same hours. Research and signal arrive prepared; the AE reviews and customizes rather than starting cold. The constraint is no longer analyst-hours \u2014 it is ICP quality and selling time.'
+  };
+  function setCov(n){
+    dEls.forEach(function(d,i){
+      if(reduce){ d.classList.toggle('on', i<n); return; }
+      setTimeout(function(){ d.classList.toggle('on', i<n); }, i*3);
+    });
+    covread.innerHTML = COPY[n];
+  }
+  document.querySelectorAll('#covseg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#covseg button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      setCov(parseInt(b.getAttribute('data-n'),10));
+    });
+  });
+  setCov(50);
+})();
+</script>
+</body>
+</html>
