@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renewal Likelihood Model — Design Framework</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F2; --card:#F7F9FA; --ink:#121B26; --muted:#54646F; --faint:#8898A3;
+  --rule:#C9D4DB; --rule-soft:#DBE3E8;
+  --blue:#1E4FA3; --blue-bright:#2E66C8; --blue-soft:#DDE6F4; --blue-faint:#EBF0F9;
+  --risk:#A63D22; --risk-soft:#F2E0D9;
+  --ok:#176B47; --ok-soft:#DBEDE3;
+  --warn:#8A6212; --warn-soft:#F0E7D2;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',monospace}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+.rv{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *{transition:none!important;animation:none!important}
+  .rv{opacity:1;transform:none}
+}
+
+/* sticky nav */
+.topnav{position:sticky;top:0;z-index:50;background:rgba(18,27,38,.97);backdrop-filter:blur(6px);border-bottom:1px solid #29394C}
+.topnav .wrap{display:flex;align-items:center;gap:22px;height:52px;position:relative}
+.brand{font-family:'Archivo',sans-serif;font-weight:900;font-size:13px;letter-spacing:.06em;color:var(--paper);text-transform:uppercase;white-space:nowrap}
+.brand span{color:#9CC1F5}
+.navlinks{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#93A5B8;text-decoration:none;padding:6px 11px;white-space:nowrap;border-radius:2px}
+.navlinks a.on{color:var(--paper);background:#233348}
+.navlinks a:hover{color:var(--paper)}
+.navprog{position:absolute;left:0;bottom:-1px;height:2px;background:#9CC1F5;width:0}
+
+/* header */
+.masthead{border-bottom:2px solid var(--ink);padding:44px 0 30px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.eyebrow .dot{color:var(--faint)}
+.status{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--blue);border:1.5px dashed var(--blue);background:var(--blue-faint);padding:5px 11px;margin-bottom:16px}
+h1{font-family:'Archivo',sans-serif;font-weight:900;font-size:clamp(30px,5.4vw,54px);line-height:1.03;letter-spacing:-.015em;text-transform:uppercase;max-width:22ch}
+.masthead .dek{margin-top:16px;max-width:64ch;font-size:17px;color:var(--muted)}
+.masthead .dek b{color:var(--ink);font-weight:600}
+.byline{margin-top:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+
+/* thesis band */
+.thesis{background:var(--ink);color:var(--paper);padding:30px 0}
+.thesis .wrap{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+@media(max-width:820px){.thesis .wrap{grid-template-columns:1fr}}
+.thesis h3{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7C93B5;margin-bottom:10px}
+.thesis .big{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(17px,2.4vw,21px);line-height:1.35}
+.thesis .big em{font-style:normal;color:#9CC1F5}
+
+section{padding:56px 0 8px;scroll-margin-top:64px}
+.sec-head{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:26px}
+.sec-head .no{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint);letter-spacing:.1em}
+.sec-head h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(20px,3vw,28px);letter-spacing:-.01em;text-transform:uppercase}
+.sec-head .meta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+p{max-width:70ch;margin-bottom:16px}
+p b{font-weight:600}
+.note{font-size:14px;color:var(--muted);border-left:3px solid var(--rule);padding-left:14px;max-width:66ch}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+@media(max-width:820px){.cols{grid-template-columns:1fr}}
+
+/* ===== INTERACTIVE LIFECYCLE ===== */
+.life{background:var(--ink);color:var(--paper);border-radius:3px;overflow:hidden;margin:6px 0 16px}
+.life-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 22px;border-bottom:1px solid #29394C;flex-wrap:wrap}
+.life-head h3{font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;letter-spacing:.04em;text-transform:uppercase}
+.life-head .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#93A5B8}
+.life-scroll{overflow-x:auto;padding:26px 22px 6px}
+.life-track{min-width:820px;position:relative;padding-bottom:6px}
+.life-rail{position:absolute;left:6px;right:6px;top:44px;height:3px;background:#29394C;border-radius:2px}
+.life-fill{position:absolute;left:6px;top:44px;height:3px;background:#9CC1F5;border-radius:2px;width:0;transition:width .45s ease}
+.life-stops{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;position:relative}
+.life-stop{background:none;border:none;cursor:pointer;text-align:left;padding:0 6px;color:inherit;font-family:inherit}
+.life-stop:focus-visible{outline:2px solid #9CC1F5;outline-offset:3px}
+.life-stop .day{font-family:'Archivo',sans-serif;font-weight:900;font-size:21px;letter-spacing:-.01em;color:#6E86A6;transition:color .25s}
+.life-stop .tick{width:13px;height:13px;border:2.5px solid #4A5F79;background:var(--ink);border-radius:50%;margin:10px 0 12px;position:relative;z-index:2;transition:all .25s}
+.life-stop .nm{font-family:'Archivo',sans-serif;font-weight:700;font-size:12.5px;line-height:1.3;color:#93A5B8;transition:color .25s}
+.life-stop.on .day{color:#9CC1F5}
+.life-stop.on .tick{background:#9CC1F5;border-color:#9CC1F5;box-shadow:0 0 0 4px rgba(156,193,245,.18)}
+.life-stop.on .nm{color:var(--paper)}
+.life-stop.end .day{color:#C97B62}
+.life-stop.end.on .day{color:#E8A184}
+.life-stop.end.on .tick{background:#E8A184;border-color:#E8A184;box-shadow:0 0 0 4px rgba(232,161,132,.18)}
+.life-detail{padding:20px 22px 22px;border-top:1px solid #29394C;display:grid;grid-template-columns:1.15fr 1fr;gap:26px}
+@media(max-width:820px){.life-detail{grid-template-columns:1fr}}
+.ld-left .ld-who{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9CC1F5;margin-bottom:7px}
+.ld-left h4{font-family:'Archivo',sans-serif;font-weight:800;font-size:19px;margin-bottom:8px}
+.ld-left .ld-d{font-size:14px;color:#B9C6D4;line-height:1.6;max-width:56ch}
+.ld-left .ld-decision{margin-top:12px;font-size:13px;color:#E3C069;border-left:3px solid #E3C069;padding-left:12px;line-height:1.55;max-width:52ch}
+.ld-right h5{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#93A5B8;margin-bottom:10px}
+.sigchips{display:flex;flex-direction:column;gap:6px}
+.sigchip{display:flex;align-items:center;gap:9px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:7px 10px;border:1px solid #29394C;border-radius:2px;color:#5E7189;transition:all .25s}
+.sigchip .dotc{width:8px;height:8px;border-radius:50%;background:#374A61;flex:none;transition:background .25s}
+.sigchip.live{color:#DCE7F2;border-color:#3A5070}
+.sigchip.live .dotc{background:#7FD1A9}
+.life-foot{padding:11px 22px;border-top:1px solid #29394C;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#6E86A6;line-height:1.6}
+
+/* ===== OUTCOMES ===== */
+.out-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.out-controls button{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;background:var(--card);border:1px solid var(--rule);padding:7px 13px;cursor:pointer;color:var(--muted);border-radius:2px;transition:all .2s}
+.out-controls button:hover{border-color:var(--ink);color:var(--ink)}
+.out-controls button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.out-controls button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.outcomes{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:900px){.outcomes{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.outcomes{grid-template-columns:repeat(2,1fr)}}
+.out{border:1px solid var(--rule);background:var(--card);padding:12px 12px 11px;cursor:pointer;transition:all .25s;position:relative}
+.out:hover{border-color:var(--ink);transform:translateY(-2px)}
+.out:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.out.dim{opacity:.25;transform:scale(.97)}
+.out.sel{border-color:var(--ink);box-shadow:0 3px 0 var(--ink)}
+.out .band{height:4px;margin:-12px -12px 10px}
+.out.good .band{background:var(--ok)}
+.out.mid .band{background:var(--blue)}
+.out.bad .band{background:var(--risk)}
+.out h4{font-family:'Archivo',sans-serif;font-weight:700;font-size:12.5px;line-height:1.3;margin-bottom:4px}
+.out .d{font-size:11.5px;color:var(--muted);line-height:1.45}
+.out-detail{background:var(--card);border:1px solid var(--ink);padding:16px 18px;margin-bottom:18px;display:none}
+.out-detail.show{display:block}
+.out-detail .odt{font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;margin-bottom:6px}
+.out-detail .odw{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.06em;margin-bottom:8px}
+.out-detail .odw.good{color:var(--ok)} .out-detail .odw.mid{color:var(--blue)} .out-detail .odw.bad{color:var(--risk)}
+.out-detail .odd{font-size:13.5px;color:var(--muted);line-height:1.6;max-width:78ch}
+
+/* ===== SIGNALS ===== */
+.sig-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.sig-controls .cap{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-right:4px}
+.sig-controls button{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;background:var(--card);border:1px solid var(--rule);padding:6px 11px;cursor:pointer;color:var(--muted);border-radius:2px;transition:all .2s}
+.sig-controls button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sig-controls button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.fam-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:820px){.fam-grid{grid-template-columns:1fr}}
+.fam{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--blue);padding:18px}
+.fam h3{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;margin-bottom:3px}
+.fam .w{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:12px}
+.fam ul{list-style:none}
+.fam li{font-size:13.5px;line-height:1.5;padding:9px 0;border-top:1px dashed var(--rule-soft);transition:opacity .25s}
+.fam li.dim{opacity:.22}
+.fam li b{font-weight:600}
+.fam li .ev{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
+.fam li .flag{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--risk);margin-top:3px}
+.chip{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;padding:2px 7px;border-radius:2px;margin-left:8px;vertical-align:1px}
+.chip.inst{background:var(--ok-soft);color:var(--ok)}
+.chip.heur{background:var(--blue-soft);color:var(--blue)}
+.chip.hypo{background:var(--warn-soft);color:var(--warn)}
+.chip.unver{background:var(--risk-soft);color:var(--risk)}
+
+/* discipline */
+.rules{counter-reset:r;margin-bottom:18px}
+.rule-item{display:flex;gap:16px;padding:15px 0;border-bottom:1px solid var(--rule-soft)}
+.rule-item .n{counter-increment:r;font-family:'Archivo',sans-serif;font-weight:900;font-size:20px;color:var(--blue);min-width:30px}
+.rule-item .n::before{content:counter(r,decimal-leading-zero)}
+.rule-item .t{font-family:'Archivo',sans-serif;font-weight:700;font-size:14.5px;margin-bottom:4px}
+.rule-item .d{font-size:13.5px;color:var(--muted);line-height:1.55;max-width:74ch}
+
+/* plan */
+.plan{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:820px){.plan{grid-template-columns:1fr}}
+.pl{background:var(--card);border:1px solid var(--rule);padding:18px;transition:border-color .2s, transform .2s}
+.pl:hover{border-color:var(--ink);transform:translateY(-2px)}
+.pl h3{font-family:'Archivo',sans-serif;font-weight:700;font-size:14.5px;margin-bottom:8px}
+.pl p{font-size:14px;color:var(--muted);margin-bottom:0;max-width:none}
+
+footer{border-top:2px solid var(--ink);margin-top:56px;padding:24px 0 48px}
+footer p{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);max-width:none;line-height:1.7}
+</style>
+</head>
+<body>
+
+<nav class="topnav" aria-label="Sections">
+  <div class="wrap">
+    <div class="brand">RENEWAL <span>MODEL</span></div>
+    <div class="navlinks" id="navlinks">
+      <a href="#framing">Framing</a>
+      <a href="#lifecycle">Lifecycle</a>
+      <a href="#target">Outcomes</a>
+      <a href="#signals">Signals</a>
+      <a href="#discipline">Discipline</a>
+      <a href="#plan">Validation Plan</a>
+    </div>
+    <div class="navprog" id="navprog"></div>
+  </div>
+</nav>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">
+      <span>RevOps Design Framework</span><span class="dot">·</span>
+      <span>Customer Success · Retention Forecasting</span>
+    </div>
+    <div class="status">STATUS: DESIGN PHASE — SIGNAL ARCHITECTURE DEFINED · WEIGHT CALIBRATION PENDING OUTCOME DATA</div>
+    <h1>Scoring Renewals Like Renewals —<br>Not Like New Logos</h1>
+    <p class="dek">A predictive likelihood framework for CS-owned renewal opportunities at a PE-backed B2B SaaS company. Presented honestly at the stage it reached: <b>the design decisions, the signal architecture, and the discovery discipline that shaped both</b> — including everything I refused to assume before the data could speak.</p>
+    <div class="byline">
+      <span>Jason Dommel — Revenue Operations</span>
+      <span>Companion piece: New-Logo Pipeline Qualification Gate (validated, AUC 0.843)</span>
+    </div>
+  </div>
+</header>
+
+<div class="thesis">
+  <div class="wrap">
+    <div>
+      <h3>The wrong instinct</h3>
+      <div class="big">"We scored the sales pipeline — just run the same model on renewal opps."</div>
+    </div>
+    <div>
+      <h3>The design thesis</h3>
+      <div class="big">New-logo closing measures <em>buying behavior</em>. Renewal measures <em>value realization, switching cost, and relationship health</em>. Different physics — <em>different signals, built from scratch.</em></div>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+<section id="framing" class="rv">
+  <div class="sec-head"><span class="no">01</span><h2>Why Not Reuse the Sales Score</h2></div>
+  <div class="cols">
+    <div>
+      <p>The sales-side scoring work had just proven that qualification signals must be <b>earned per motion</b> — expansion and new logo behaved so differently (78% vs. 31% win rates) that a shared gate was statistically indefensible. Renewals are a third motion again, with their own physics: the customer already bought, already deployed, already has switching costs and a relationship history.</p>
+      <p>So the first design decision was a refusal: <b>no signal enters this model by analogy to the sales score.</b> Committee coverage, deal age, close-date pushes — the signals that dominated new-logo prediction — may mean something entirely different on a renewal, or nothing at all.</p>
+    </div>
+    <div>
+      <p>The second decision was sequencing. Before designing a single weight, I ran discovery against the CS organization's actual process documentation and systems — and the documents answered most of the discovery question list before a meeting was needed. What remained was the small set only practitioners could answer: <b>which signals CSMs actually trust, what they wish they could see but can't, and what informal health checks exist outside the documented process.</b></p>
+      <p class="note">A scoring model designed before auditing what data actually exists is a slide, not a model. The sales-side build made that lesson expensive enough to remember.</p>
+    </div>
+  </div>
+</section>
+
+<section id="lifecycle" class="rv">
+  <div class="sec-head"><span class="no">02</span><h2>The Renewal Lifecycle Is the Spine</h2><span class="meta">Interactive — click each stage</span></div>
+  <p>Renewals here run on a long, structured clock — the opportunity exists <b>400 days before the renewal date</b>, auto-created from billing-system data. That clock dictates the model's core constraint: <b>a signal is only useful if it's available before the decision it needs to inform.</b> Walk the timeline and watch the signal set come online.</p>
+
+  <div class="life">
+    <div class="life-head">
+      <h3>Lifecycle Explorer</h3>
+      <div class="sub">T−400 → T−0 · signal availability per stage</div>
+    </div>
+    <div class="life-scroll">
+      <div class="life-track">
+        <div class="life-rail"></div>
+        <div class="life-fill" id="lifeFill"></div>
+        <div class="life-stops" id="lifeStops"></div>
+      </div>
+    </div>
+    <div class="life-detail">
+      <div class="ld-left">
+        <div class="ld-who" id="ldWho"></div>
+        <h4 id="ldName"></h4>
+        <div class="ld-d" id="ldDesc"></div>
+        <div class="ld-decision" id="ldDecision"></div>
+      </div>
+      <div class="ld-right">
+        <h5>Signals live by this point</h5>
+        <div class="sigchips" id="sigChips"></div>
+      </div>
+    </div>
+    <div class="life-foot">A score that turns accurate at T−30 is a post-mortem — so the model is graded at each decision point, not at the finish line. Churn/downgrade requests branch into a separate four-status workflow object through CS and Finance at any point.</div>
+  </div>
+</section>
+
+<section id="target" class="rv">
+  <div class="sec-head"><span class="no">03</span><h2>Design Decision: The Target Variable Isn't Binary</h2><span class="meta">Filter · click any outcome</span></div>
+  <p>"Did they renew — yes or no?" collapses outcomes that mean completely different things to the ARR waterfall. A customer renewing at 60% of prior ACV is not a retained customer with an asterisk; it's a contraction event. The revenue taxonomy I'd built separately already defined the outcome space, so the model targets it directly:</p>
+
+  <div class="out-controls" id="outControls" role="group" aria-label="Filter outcomes">
+    <button data-g="all" class="on">All 10</button>
+    <button data-g="good">Retention (4)</button>
+    <button data-g="mid">Modified (3)</button>
+    <button data-g="bad">Loss (3)</button>
+  </div>
+  <div class="outcomes" id="outGrid"></div>
+  <div class="out-detail" id="outDetail" aria-live="polite">
+    <div class="odt" id="odTitle"></div>
+    <div class="odw" id="odBucket"></div>
+    <div class="odd" id="odDesc"></div>
+  </div>
+
+  <p class="note">Honest complication, flagged in design: contraction had no opportunity type in the historical CRM data, so the training set for downgrade outcomes may not exist yet. The taxonomy has to be enforced going forward before those classes become learnable — the model roadmap and the data-architecture roadmap are the same roadmap.</p>
+</section>
+
+<section id="signals" class="rv">
+  <div class="sec-head"><span class="no">04</span><h2>Candidate Signal Architecture</h2><span class="meta">Filter by evidence status</span></div>
+  <p>Four families, twelve candidate signals. Weights are deliberately unassigned — on the sales side, every weight was anchored to a measured win rate, and renewals get the same standard. Each signal carries its <b>evidence status</b>: what's instrumented today, what's a documented operating heuristic, what's a hypothesis, and where coverage itself is unverified.</p>
+
+  <div class="sig-controls" id="sigControls" role="group" aria-label="Filter signals by status">
+    <span class="cap">Show:</span>
+    <button data-s="all" class="on">All 12</button>
+    <button data-s="inst">Instrumented</button>
+    <button data-s="heur">Documented heuristic</button>
+    <button data-s="hypo">Hypothesis</button>
+    <button data-s="unver">Coverage unverified</button>
+  </div>
+
+  <div class="fam-grid">
+    <div class="fam">
+      <h3>Deployment &amp; Adoption</h3>
+      <div class="w">Weight: to be calibrated</div>
+      <ul>
+        <li data-s="inst"><b>Deployment % vs. licensed capacity</b><span class="chip inst">INSTRUMENTED</span><span class="ev">Operational anchor exists: 80% deployment is the documented implementation-to-maintenance handoff threshold. A customer who never fully deployed is paying for shelf-ware — the cleanest churn hypothesis in the set.</span></li>
+        <li data-s="inst"><b>Implementation completeness at handoff</b><span class="chip inst">INSTRUMENTED</span><span class="ev">Was the account maintenance-ready, or handed off with open items? Design bet: incomplete implementations age into renewal risk.</span></li>
+        <li data-s="hypo"><b>Pending integration / change activity</b><span class="chip hypo">HYPOTHESIS</span><span class="ev">Open platform changes at renewal time cut both ways — investment signal or unresolved friction. Needs testing, not assuming.</span></li>
+      </ul>
+    </div>
+    <div class="fam">
+      <h3>Commercial</h3>
+      <div class="w">Weight: to be calibrated</div>
+      <ul>
+        <li data-s="heur"><b>Invoice payment status</b><span class="chip heur">HEURISTIC</span><span class="ev">Documented CS heuristic: a paid current-term invoice supports a near-certain renewal forecast. Strong prior — but a heuristic is a hypothesis until backtested.</span></li>
+        <li data-s="inst"><b>Price-increase magnitude vs. account risk tier</b><span class="chip inst">INSTRUMENTED</span><span class="ev">The increase is set at T−145 to T−105 — meaning the score can inform pricing posture, not just predict around it. This is where the model earns money, not just accuracy.</span></li>
+        <li data-s="hypo"><b>ACV trajectory across prior terms</b><span class="chip hypo">HYPOTHESIS</span><span class="ev">Grew, held, or shrank at last renewal — prior-term behavior as base rate.</span></li>
+      </ul>
+    </div>
+    <div class="fam">
+      <h3>Engagement &amp; Sentiment</h3>
+      <div class="w">Weight: to be calibrated</div>
+      <ul>
+        <li data-s="inst"><b>CSM structured evaluation</b><span class="chip inst">INSTRUMENTED</span><span class="ev">Two instrumented inputs exist: an "ARR likely to renew" percentage and a likelihood-to-renew dropdown. Test CSM judgment against outcomes — calibrate it, don't worship or dismiss it.</span></li>
+        <li data-s="hypo"><b>CTA responsiveness after T−75</b><span class="chip hypo">HYPOTHESIS</span><span class="ev">Does the customer engage when structured outreach begins? Silence is a signal.</span></li>
+        <li data-s="unver"><b>Call-based sentiment signals</b><span class="chip unver">UNVERIFIED</span><span class="flag">Coverage caveat flagged in design: if renewal conversations happen in tickets and email rather than recorded calls, conversation analytics is noise for this motion. Verify coverage before building trackers.</span></li>
+      </ul>
+    </div>
+    <div class="fam">
+      <h3>Structural Risk Events</h3>
+      <div class="w">Weight: to be calibrated</div>
+      <ul>
+        <li data-s="inst"><b>Churn-request workflow triggers</b><span class="chip inst">INSTRUMENTED</span><span class="ev">A formal churn/downgrade request object exists with a four-status workflow through CS and Finance. Any entry into that workflow is a hard, dated risk event — the closest thing this model has to ground truth before the outcome.</span></li>
+        <li data-s="inst"><b>Quote slippage past T−60</b><span class="chip inst">INSTRUMENTED</span><span class="ev">The process defines the deadline; the model measures the miss.</span></li>
+        <li data-s="hypo"><b>Support tier &amp; escalation activity</b><span class="chip hypo">HYPOTHESIS</span><span class="ev">Escalation density in the run-up window, normalized by account tier.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="discipline" class="rv">
+  <div class="sec-head"><span class="no">05</span><h2>Discipline Imported from the Sales-Side Build</h2></div>
+  <p>The new-logo gate project generated rules the hard way. This model inherits them as constraints, not suggestions:</p>
+  <div class="rules">
+    <div class="rule-item"><span class="n"></span><div><div class="t">Audit field population before designing around a field</div><div class="d">On the sales side, the "Decision Maker" tag looked authoritative and was populated on 8 of 170 deals. Every candidate renewal signal gets a null-rate audit before it earns a weight.</div></div></div>
+    <div class="rule-item"><span class="n"></span><div><div class="t">Populated is not accurate</div><div class="d">A filled field proves someone typed something. CSM evaluations and health inputs get validated against outcomes, not taken at face value.</div></div></div>
+    <div class="rule-item"><span class="n"></span><div><div class="t">Hunt for documentation bias</div><div class="d">Sales-methodology fields were anti-predictive because losses got post-mortems and wins skipped paperwork. The renewal equivalent is plausible — churning accounts may be documented more richly than quiet renewals. Test for it explicitly.</div></div></div>
+    <div class="rule-item"><span class="n"></span><div><div class="t">Ban target leakage</div><div class="d">Late-lifecycle fields that only fill once the outcome is effectively known (quote signed, churn request resolved) are outcomes wearing a costume. They're excluded from the predictive score and used only as state.</div></div></div>
+    <div class="rule-item"><span class="n"></span><div><div class="t">One motion, one model</div><div class="d">The lesson that started this project: expansion, new logo, and renewal are different physics. No cross-motion signal borrowing without independent validation.</div></div></div>
+  </div>
+</section>
+
+<section id="plan" class="rv">
+  <div class="sec-head"><span class="no">06</span><h2>Calibration &amp; Validation Plan</h2></div>
+  <div class="plan">
+    <div class="pl"><h3>1 · Backtest against closed renewals</h3><p>Score historical renewal opportunities blind to outcome, then compare score bands to actual results — same protocol that produced the sales rubric's 0.843 AUC. Anchor every weight to a measured retention rate.</p></div>
+    <div class="pl"><h3>2 · Transparent rubric over black box</h3><p>Points-based and auditable, benchmarked against a regression. A CSM should see exactly which signal moved an account's score; CS leadership should be able to defend any number in a portfolio review.</p></div>
+    <div class="pl"><h3>3 · Lead-time scoring, not point-in-time</h3><p>Evaluate accuracy at T−145, T−90, and T−60 separately — the score's job is to be right when decisions are made, so it's graded at each decision point, not just at the finish line.</p></div>
+    <div class="pl"><h3>4 · Recalibrate on a cadence</h3><p>Outcome taxonomy enforcement will improve the training data every quarter. Weights get re-anchored as the contraction and partial-renewal classes become learnable, with each version stamped and dated.</p></div>
+  </div>
+  <p class="note">Where it stood: signal architecture and target design complete, discovery narrowed to practitioner-only questions, calibration gated on the outcome-taxonomy enforcement that makes the historical data trustworthy. Shipping an uncalibrated score with invented weights was available at any time — and declined.</p>
+</section>
+
+<section id="takeaway" class="rv">
+  <div class="sec-head"><span class="no">07</span><h2>What This Demonstrates</h2></div>
+  <p>Most scoring models fail before math is involved — they're designed by analogy, on unaudited data, against a target variable that doesn't match how revenue actually behaves. This framework shows the opposite habit: <b>motion-specific design, a taxonomy-grade target variable, signals sourced from the operating process rather than a template, and a refusal to assign weights the data hasn't earned.</b> The thought process is the deliverable.</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>SANITIZED WORK SAMPLE — Company, individuals, vendor names, and account identifiers removed; process timings and thresholds presented as designed. Framework developed in a Head of Revenue Operations capacity at a PE-backed B2B SaaS company. Companion artifact: New-Logo Pipeline Qualification Gate (validated). © Jason Dommel.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* reveal */
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.08});
+  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+
+  /* scrollspy */
+  var links = Array.prototype.slice.call(document.querySelectorAll('#navlinks a'));
+  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  var prog = document.getElementById('navprog');
+  function spy(){
+    var y = window.scrollY + 90, current=0;
+    secs.forEach(function(s,i){ if(s && s.offsetTop <= y) current=i; });
+    links.forEach(function(a,i){ a.classList.toggle('on', i===current); });
+    var h=document.documentElement;
+    prog.style.width = (h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+  }
+  window.addEventListener('scroll', spy, {passive:true}); spy();
+
+  /* ===== LIFECYCLE EXPLORER ===== */
+  var SIGNALS = [
+    {id:'dep',  name:'Deployment % / implementation state', from:0},
+    {id:'acv',  name:'ACV trajectory (prior terms)',        from:0},
+    {id:'csm',  name:'CSM structured evaluation',           from:0},
+    {id:'esc',  name:'Support tier & escalations',          from:0},
+    {id:'chn',  name:'Churn-request workflow trigger',      from:0},
+    {id:'pri',  name:'Price-increase posture set',          from:1},
+    {id:'rxn',  name:'Customer reaction to increase',       from:2},
+    {id:'cta',  name:'CTA responsiveness',                  from:3},
+    {id:'slip', name:'Quote slippage past deadline',        from:4}
+  ];
+  var STAGES = [
+    {day:'T−400', name:'Renewal opp created', who:'Revenue Accounting',
+     desc:'Auto-generated in CRM from billing-system contract data, 400 days before the renewal date. The scoring window opens here — with the account-state signals already live.',
+     dec:'Decision informed: none yet — this is the baseline read. Early-window accuracy is graded separately from late-window accuracy.'},
+    {day:'T−145', name:'Price-increase decision window', who:'Finance · T−145 to T−105',
+     desc:'Increase magnitude is set for the account. This is the first — and highest-leverage — decision the score must inform: risk-tiered accounts warrant different pricing posture.',
+     dec:'Decision informed: increase magnitude. A score that is accurate here changes revenue, not just reporting.'},
+    {day:'T−90', name:'Increase letter sent', who:'Automated',
+     desc:'The increase percentage field auto-populates the CPQ quote and the letter goes out. From this point, the customer\u2019s reaction is a live behavioral signal.',
+     dec:'Decision informed: escalation posture — who gets proactive senior attention based on reaction.'},
+    {day:'T−75', name:'CSM call-to-action fires', who:'CS Platform',
+     desc:'Structured CSM engagement begins on a defined playbook. Whether the customer engages at all when outreach starts is itself a candidate signal — silence is data.',
+     dec:'Decision informed: playbook intensity and save-play triggering.'},
+    {day:'T−60', name:'Quote resolution target', who:'CS · CPQ',
+     desc:'Operating target: signed quote resolved 60+ days before the renewal date. Slippage past this line is a measurable, dated risk event.',
+     dec:'Decision informed: forecast category and leadership escalation.'},
+    {day:'T−0', name:'Renewal date — outcome recorded', who:'Outcome',
+     desc:'The opportunity closes to one of ten defined outcomes, not a binary. Every outcome feeds the next calibration cycle.',
+     dec:'Nothing to inform — anything the model learns here arrived too late to act on. That is the whole argument for lead-time scoring.', end:true}
+  ];
+  var stopsEl=document.getElementById('lifeStops');
+  STAGES.forEach(function(s,i){
+    var b=document.createElement('button');
+    b.className='life-stop'+(s.end?' end':'');
+    b.setAttribute('aria-label', s.day+' '+s.name);
+    b.innerHTML='<div class="day">'+s.day+'</div><div class="tick"></div><div class="nm">'+s.name+'</div>';
+    b.addEventListener('click', function(){ setStage(i); });
+    stopsEl.appendChild(b);
+  });
+  var chipsEl=document.getElementById('sigChips');
+  SIGNALS.forEach(function(sg){
+    var d=document.createElement('div');
+    d.className='sigchip'; d.dataset.id=sg.id;
+    d.innerHTML='<span class="dotc"></span>'+sg.name;
+    chipsEl.appendChild(d);
+  });
+  function setStage(i){
+    var s=STAGES[i];
+    stopsEl.querySelectorAll('.life-stop').forEach(function(el,j){ el.classList.toggle('on', j===i); });
+    document.getElementById('lifeFill').style.width = (i/(STAGES.length-1)*100)+'%';
+    document.getElementById('ldWho').textContent=s.who;
+    document.getElementById('ldName').textContent=s.day+' · '+s.name;
+    document.getElementById('ldDesc').textContent=s.desc;
+    document.getElementById('ldDecision').textContent=s.dec;
+    var live=0;
+    SIGNALS.forEach(function(sg){
+      var chip=chipsEl.querySelector('[data-id="'+sg.id+'"]');
+      var isLive = sg.from<=i;
+      chip.classList.toggle('live', isLive);
+      if(isLive) live++;
+    });
+  }
+  setStage(1); /* open on the money decision */
+
+  /* ===== OUTCOMES ===== */
+  var OUTCOMES=[
+    {g:'good',t:'Flat renewal',d:'Full ACV retained',w:'ARR WATERFALL: RETAINED',
+     x:'The quiet base case — and the one most at risk of being under-documented relative to churn. The model treats it as a class to predict, not a default.'},
+    {g:'good',t:'Renewal + price increase',d:'Retained with uplift',w:'ARR WATERFALL: RETAINED + UPLIFT',
+     x:'Retention with expansion of rate, not volume. Directly coupled to the T−145 pricing decision the score exists to inform — increase tolerance is part of the prediction.'},
+    {g:'good',t:'Renewal + expansion',d:'Product/volume added',w:'ARR WATERFALL: RETAINED + EXPANSION',
+     x:'Retention plus growth. Kept distinct from uplift because volume expansion and price uplift have different drivers and different owners.'},
+    {g:'good',t:'Early renewal',d:'Committed ahead of date',w:'ARR WATERFALL: RETAINED (PULLED FORWARD)',
+     x:'The strongest possible retention signal — and a timing event the waterfall has to handle without double-counting.'},
+    {g:'mid',t:'Co-term consolidation',d:'Contracts merged',w:'ARR WATERFALL: RESTRUCTURED',
+     x:'Neither win nor loss — a structural event. Excluded from naive retention-rate math or it silently distorts both numerator and denominator.'},
+    {g:'mid',t:'Renewal + downgrade',d:'Retained, reduced ACV',w:'ARR WATERFALL: CONTRACTION',
+     x:'The outcome binary models hide. A logo retained at 60% of prior ACV is a contraction event — calling it "renewed" is how retention dashboards lie politely.'},
+    {g:'mid',t:'Partial renewal',d:'Mixed keep/drop',w:'ARR WATERFALL: CONTRACTION (COMPONENT)',
+     x:'Some components renew, some lapse. Requires component-level outcome tracking — one of the data-architecture prerequisites this model surfaced.'},
+    {g:'bad',t:'Partial churn',d:'Component lost',w:'ARR WATERFALL: CHURN (PARTIAL)',
+     x:'A product or entity lost while the relationship survives. Often the leading indicator of full churn one term later — which makes it a feature as well as an outcome.'},
+    {g:'bad',t:'Non-renewal',d:'Full churn at term',w:'ARR WATERFALL: CHURN (FULL)',
+     x:'The headline outcome — but only one of three loss classes, and the model is graded on separating all three, not just this one.'},
+    {g:'bad',t:'Mid-term cancellation',d:'Churn before term',w:'ARR WATERFALL: CHURN (IN-TERM)',
+     x:'Bypasses the renewal clock entirely, entering through the churn-request workflow. The model\u2019s structural-risk family exists largely to catch this class early.'}
+  ];
+  var grid=document.getElementById('outGrid');
+  OUTCOMES.forEach(function(o,i){
+    var b=document.createElement('button');
+    b.className='out '+o.g; b.dataset.g=o.g; b.dataset.i=i;
+    b.innerHTML='<div class="band"></div><h4>'+o.t+'</h4><div class="d">'+o.d+'</div>';
+    b.addEventListener('click', function(){ selectOutcome(i); });
+    grid.appendChild(b);
+  });
+  var selIdx=-1;
+  function selectOutcome(i){
+    var det=document.getElementById('outDetail');
+    if(selIdx===i){ selIdx=-1; det.classList.remove('show');
+      grid.querySelectorAll('.out').forEach(function(c){c.classList.remove('sel')}); return; }
+    selIdx=i;
+    var o=OUTCOMES[i];
+    grid.querySelectorAll('.out').forEach(function(c){ c.classList.toggle('sel', parseInt(c.dataset.i,10)===i); });
+    document.getElementById('odTitle').textContent=o.t;
+    var ob=document.getElementById('odBucket');
+    ob.textContent=o.w; ob.className='odw '+o.g;
+    document.getElementById('odDesc').textContent=o.x;
+    det.classList.add('show');
+  }
+  document.getElementById('outControls').addEventListener('click', function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    this.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    var g=b.dataset.g;
+    grid.querySelectorAll('.out').forEach(function(c){
+      c.classList.toggle('dim', g!=='all' && c.dataset.g!==g);
+    });
+  });
+
+  /* ===== SIGNAL STATUS FILTER ===== */
+  document.getElementById('sigControls').addEventListener('click', function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    this.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    var s=b.dataset.s;
+    document.querySelectorAll('.fam li').forEach(function(li){
+      li.classList.toggle('dim', s!=='all' && li.dataset.s!==s);
+    });
+  });
+})();
+</script>
+</body>
+</html>
