@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#EEF1F5">
+<title>Annual Capacity Planning Model | Jason Dommel</title>
+<meta name="description" content="A bottoms-up support capacity model built from 36 timed CSR motions. Interactive case study by Jason Dommel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F5; --card:#F8FAFC; --ink:#111B33;
+  --muted:#56637E; --faint:#8A94AB;
+  --rule:#CFD6E2; --rule-soft:#DFE4EC;
+  --ai:#12856A; --ai-soft:#DCEEE8;
+  --no:#A63D22; --no-soft:#F4E2DB;
+  --blue:#2A5FA8; --blue-soft:#DEE7F4;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;color-scheme:light only;background:var(--paper);-webkit-text-size-adjust:100%}
+body{color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',monospace}
+button{font-family:inherit}
+@media (prefers-color-scheme: dark){
+  html,body{background:var(--paper)!important;color:var(--ink)!important}
+  .app-head,.pane,.ctrl,.out-card,.motion-row,.modal-box,.preset,.tabs{background:var(--card)!important}
+  h1,h2,h3,h4,p,label,.mname{color:var(--ink)!important}
+  .out-card.hero{background:var(--ai-soft)!important}
+}
+
+/* case-study band */
+.caseband{flex:0 0 auto;background:var(--paper);border-bottom:1px solid var(--rule);padding:9px 20px}
+.cb-row{display:flex;align-items:stretch;gap:7px;max-width:1560px;margin:0 auto;width:100%}
+.cb-lab{display:flex;align-items:center;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);padding-right:5px;white-space:nowrap;flex:0 0 auto}
+.cb{flex:1 1 0;min-width:0;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;
+  column-gap:7px;row-gap:1px;align-items:baseline;text-align:left;cursor:pointer;
+  background:var(--card);border:1px solid var(--rule);border-top:2px solid var(--ai);padding:7px 10px;
+  transition:transform .16s,box-shadow .16s,border-color .16s}
+.cb:hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(17,27,51,.11);border-color:var(--ai)}
+.cb:focus-visible{outline:2px solid var(--ai);outline-offset:1px}
+.cbn{grid-row:1/3;font-size:9.5px;letter-spacing:.1em;color:var(--ai);align-self:center}
+.cbt{font-family:'Archivo',sans-serif;font-weight:800;font-size:11.5px;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);line-height:1.15}
+.cbd{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);line-height:1.3;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:900px){.cb-lab{display:none}.cbd{display:none}.cb{flex:1 1 auto;justify-content:center}}
+
+/* ================= APP SHELL ================= */
+.app{display:flex;flex-direction:column;height:100dvh;height:100vh}
+.app-head{flex:0 0 auto;background:var(--card);border-bottom:2px solid var(--ink);padding:12px 20px}
+.head-row{display:flex;align-items:center;gap:14px;max-width:1560px;margin:0 auto;width:100%}
+.brand{font-family:'Archivo',sans-serif;font-weight:900;font-size:22px;letter-spacing:-.005em;text-transform:uppercase;white-space:nowrap;line-height:1.05}
+.brand span{color:var(--ai)}
+.brand small{display:block;font-family:'IBM Plex Mono',monospace;font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.head-links{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.hstat{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);white-space:nowrap;
+  border:1px solid var(--ai);padding:6px 11px;background:var(--ai-soft)}
+.hstat b{font-family:'Archivo',sans-serif;font-weight:900;font-size:14px;color:var(--ai)}
+@media(max-width:520px){.hstat{display:none}}
+
+.tabs{display:none;flex:0 0 auto;border-bottom:1px solid var(--rule);background:var(--card)}
+.tabs button{flex:1;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;padding:10px 4px;color:var(--muted);cursor:pointer}
+.tabs button.on{color:var(--ai);border-bottom-color:var(--ai)}
+
+.body-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:412px minmax(0,1fr);gap:16px;padding:14px 20px 16px;max-width:1560px;margin:0 auto;width:100%}
+.pane{min-height:0;display:flex;flex-direction:column}
+.pane-scroll{overflow-y:auto;min-height:0;flex:1 1 auto;padding-right:3px}
+.pane-lab{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.pane-lab .ln{flex:1;height:1px;background:var(--rule)}
+
+/* ================= LEFT: MOTIONS ================= */
+.presets{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.preset{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;padding:6px 9px;border:1px solid var(--rule);background:#fff;color:var(--muted);cursor:pointer}
+.preset:hover{border-color:var(--ink);color:var(--ink)}
+.preset.on{background:var(--ai);border-color:var(--ai);color:#fff;font-weight:500}
+.preset:focus-visible{outline:2px solid var(--ai);outline-offset:1px}
+
+.phase{margin-bottom:4px}
+.phase-head{display:flex;align-items:center;gap:9px;padding:8px 11px;background:var(--ph);border:1px solid var(--phc);cursor:pointer;user-select:none}
+.phase-head:focus-visible{outline:2px solid var(--ai);outline-offset:1px}
+.phase-head .caret{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--phc);width:9px;flex:0 0 auto}
+.phase-head .pn{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--phc);flex:0 0 auto}
+.phase-head h4{font-family:'Archivo',sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);line-height:1.2;min-width:0}
+.phase-head .cnt{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);flex:0 0 auto}
+.phase-head .ph-sum{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--phc);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.phase.collapsed .motion-row{display:none}
+.motion-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--rule-soft);border-top:none;padding:7px 11px}
+.motion-row.off{background:var(--no-soft);border-color:var(--no);opacity:.55}
+.mname{font-size:13px;line-height:1.4;flex:1 1 auto;min-width:0}
+.motion-row.off .mname{text-decoration:line-through}
+.stepper{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.stepper button{font-family:'IBM Plex Mono',monospace;width:22px;height:22px;border:1px solid var(--rule);background:var(--card);color:var(--ink);cursor:pointer;font-size:12px;line-height:1;padding:0}
+.stepper button:hover{border-color:var(--ai);color:var(--ai)}
+.stepper button:focus-visible{outline:2px solid var(--ai);outline-offset:1px}
+.stepper .hrs{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;min-width:38px;text-align:center;font-variant-numeric:tabular-nums}
+.stepper .kill{width:auto;padding:0 6px;font-size:8.5px;letter-spacing:.05em}
+.motion-row.off .kill{border-color:var(--no);color:var(--no)}
+.tot-row{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:var(--ink);color:#fff;margin:6px 0}
+.tot-row .l{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:#C3CDE0}
+.tot-row .r{font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;color:#5FD6B4}
+
+/* ================= RIGHT: DASHBOARD ================= */
+.ctrls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
+.ctrl{background:#fff;border:1px solid var(--rule);padding:10px 11px}
+.ctrl label{display:block;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.ctrl .val{font-family:'Archivo',sans-serif;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.ctrl input[type=range]{width:100%;accent-color:var(--ai);height:16px;display:block}
+
+.hero-out{background:var(--ai-soft);border:1px solid var(--ai);padding:14px 15px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.hero-out .k{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ai);line-height:1.35}
+.hero-out .n{font-family:'Archivo',sans-serif;font-weight:900;font-size:46px;line-height:.9;color:var(--ai);margin-left:auto;font-variant-numeric:tabular-nums}
+.hero-sub{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);margin:-4px 0 9px;line-height:1.4}
+
+.outs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:13px}
+.out-card{background:#fff;border:1px solid var(--rule);border-top:2px solid var(--blue);padding:10px 10px}
+.out-card .k{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;line-height:1.3}
+.out-card .n{font-family:'Archivo',sans-serif;font-weight:800;font-size:18px;line-height:1;color:var(--blue);font-variant-numeric:tabular-nums}
+
+.sens{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.sens div{background:#fff;border:1px solid var(--rule);padding:9px 3px;text-align:center}
+.sens .wr{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);margin-bottom:3px}
+.sens .fte{font-family:'Archivo',sans-serif;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.sens .base{border-color:var(--ai);background:var(--ai-soft)}
+.sens .base .fte{color:var(--ai)}
+.sens-note{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px;line-height:1.45}
+
+/* ================= MODALS ================= */
+.scrim{position:fixed;inset:0;background:rgba(17,27,51,.58);backdrop-filter:blur(3px);display:none;z-index:100;padding:22px;overflow-y:auto}
+.scrim.open{display:flex;align-items:center;justify-content:center}
+.scrim.open .modal-box{margin:auto}
+.modal-box[hidden]{display:none!important}
+.modal-box{background:var(--paper);border-top:4px solid var(--ai);max-width:940px;width:100%;max-height:88dvh;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 18px 60px rgba(17,27,51,.3)}
+.modal-head{flex:0 0 auto;display:flex;align-items:baseline;gap:12px;padding:18px 22px 12px;border-bottom:1px solid var(--rule)}
+.modal-head .no{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.1em}
+.modal-head h2{font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(17px,2.6vw,24px);text-transform:uppercase;letter-spacing:-.01em;line-height:1.15}
+.modal-head .x{margin-left:auto;background:none;border:1px solid var(--rule);width:28px;height:28px;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;flex:0 0 auto}
+.modal-head .x:hover{border-color:var(--no);color:var(--no)}
+.modal-body{overflow-y:auto;padding:20px 26px 26px;min-height:0;-webkit-overflow-scrolling:touch}
+.modal-body p{max-width:72ch;margin-bottom:13px;font-size:15px}
+.modal-body p b{font-weight:600}
+.modal-body .note{font-size:13.5px;color:var(--muted);border-left:3px solid var(--ai);padding-left:13px;margin-bottom:13px}
+.m2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:700px){.m2{grid-template-columns:1fr}}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:900px){.flow{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){.flow{grid-template-columns:repeat(2,1fr)}}
+.fstep{background:#fff;border:1px solid var(--rule);border-left:3px solid var(--ai);padding:10px 11px}
+.fstep .fn{font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.11em;color:var(--ai);margin-bottom:5px}
+.fstep .ft{font-family:'Archivo',sans-serif;font-weight:800;font-size:11.5px;text-transform:uppercase;line-height:1.2;margin-bottom:4px}
+.fstep .fd{font-size:11.5px;color:var(--muted);line-height:1.4}
+.tk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:760px){.tk-grid{grid-template-columns:1fr}}
+.tk{border-top:3px solid var(--ai);padding-top:13px}
+.tk .n{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.13em;color:var(--ai);margin-bottom:7px}
+.tk h3{font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;line-height:1.25;margin-bottom:7px}
+.tk p{font-size:13px;color:var(--muted);line-height:1.55;margin:0}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+@media(max-width:700px){.stat-row{grid-template-columns:repeat(2,1fr)}}
+.stat{border-top:3px solid var(--ai);padding-top:10px}
+.stat.warm{border-top-color:var(--no)}
+.stat .sn{font-family:'Archivo',sans-serif;font-weight:900;font-size:26px;color:var(--ai);line-height:1;font-variant-numeric:tabular-nums}
+.stat.warm .sn{color:var(--no)}
+.stat .sl{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-top:6px;line-height:1.4}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:1080px){
+  .body-grid{grid-template-columns:1fr;padding:10px 14px 12px}
+  .tabs{display:flex}
+  .pane.hide{display:none}
+  .head-links button{font-size:9.5px;padding:5px 7px}
+  .outs{grid-template-columns:1fr 1fr 1fr}
+}
+@media(max-width:720px){
+  .brand{font-size:17px}
+  .brand small{font-size:9px;white-space:normal}
+}
+@media(max-width:520px){
+  .brand{font-size:15px}
+  .head-links{width:100%;margin-left:0;justify-content:flex-start;margin-top:7px}
+  .head-row{flex-wrap:wrap}
+  .ctrls{grid-template-columns:1fr 1fr}
+  .hero-out .n{font-size:38px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app-head">
+    <div class="head-row">
+      <div class="brand">CAPACITY <span>PLANNING MODEL</span>
+        <small>RevIntel client &middot; Healthcare wearables &middot; Jason Dommel &middot; illustrative data</small>
+      </div>
+      <div class="head-links">
+        <span class="hstat mono"><b id="h-fte">30</b> FTEs at current settings</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="caseband">
+    <div class="cb-row">
+      <span class="cb-lab mono">The case study</span>
+      <button type="button" class="cb" data-modal="m-ask">
+        <span class="cbn mono">01</span><span class="cbt">The Ask</span>
+        <span class="cbd">Headcount set by feel, every year</span></button>
+      <button type="button" class="cb" data-modal="m-method">
+        <span class="cbn mono">02</span><span class="cbt">The Method</span>
+        <span class="cbd">36 motions, shadowed and timed</span></button>
+      <button type="button" class="cb" data-modal="m-read">
+        <span class="cbn mono">03</span><span class="cbt">Reading It</span>
+        <span class="cbd">What the model is and isn&rsquo;t</span></button>
+      <button type="button" class="cb" data-modal="m-take">
+        <span class="cbn mono">04</span><span class="cbt">Takeaways</span>
+        <span class="cbd">Why losses drive the number</span></button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button type="button" class="tab on" data-tab="dash">Dashboard</button>
+    <button type="button" class="tab" data-tab="mot">36 Motions</button>
+  </div>
+
+  <div class="body-grid">
+
+    <!-- LEFT: dashboard -->
+    <div class="pane hide" id="pane-dash">
+      <div class="pane-lab mono"><span>Planning inputs</span><span class="ln"></span></div>
+      <div class="ctrls">
+        <div class="ctrl"><label for="goal">New bookings goal</label><div class="val" id="goal-v">$36.0M</div>
+          <input type="range" id="goal" min="6" max="90" step="1.5" value="36"></div>
+        <div class="ctrl"><label for="aos">Average order size</label><div class="val" id="aos-v">$120K</div>
+          <input type="range" id="aos" min="40" max="300" step="5" value="120"></div>
+        <div class="ctrl"><label for="wr">RFP win rate</label><div class="val" id="wr-v">30%</div>
+          <input type="range" id="wr" min="10" max="60" step="1" value="30"></div>
+        <div class="ctrl"><label for="util">Productive utilization</label><div class="val" id="util-v">72%</div>
+          <input type="range" id="util" min="55" max="90" step="1" value="72"></div>
+      </div>
+
+      <div class="pane-lab mono"><span>Result</span><span class="ln"></span></div>
+      <div class="hero-out">
+        <div class="k">Support FTEs<br>required</div>
+        <div class="n" id="o-fte">30</div>
+      </div>
+      <div class="hero-sub" id="o-fte-sub">44,800 productive hours &divide; 1,498 per FTE</div>
+
+      <div class="outs">
+        <div class="out-card"><div class="k">Deals to win</div><div class="n" id="o-wins">300</div></div>
+        <div class="out-card"><div class="k">RFPs needed</div><div class="n" id="o-rfps">1,000</div></div>
+        <div class="out-card"><div class="k">Total hours</div><div class="n" id="o-hours">44,800</div></div>
+        <div class="out-card"><div class="k">Hrs / RFP</div><div class="n" id="o-pre">35.5</div></div>
+        <div class="out-card"><div class="k">Added hrs / win</div><div class="n" id="o-post">31.0</div></div>
+        <div class="out-card"><div class="k">Cost / win</div><div class="n" id="o-cpw">$3.4K</div></div>
+      </div>
+
+      <div class="pane-lab mono"><span>Sensitivity &middot; FTEs across win rate</span><span class="ln"></span></div>
+      <div class="sens" id="sens"></div>
+      <div class="sens-note">Every lost RFP still consumes the full pre-decision load, so a five-point
+      win-rate miss changes how many humans you need.</div>
+    </div>
+
+  <!-- RIGHT: motions -->
+    <div class="pane" id="pane-mot">
+      <div class="pane-lab mono"><span>36 timed motions &middot; 7 phases &middot; tap a phase to open</span><span class="ln"></span></div>
+      <div class="presets">
+        <button type="button" class="preset on" data-preset="base">Baseline</button>
+        <button type="button" class="preset" data-preset="ai">AI drafting</button>
+        <button type="button" class="preset" data-preset="routing">Routing automation</button>
+        <button type="button" class="preset" data-preset="growth">Growth plan</button>
+        <button type="button" class="preset" data-preset="expand" style="margin-left:auto">Expand all</button>
+      </div>
+      <div class="pane-scroll" id="phases"></div>
+    </div>
+
+    </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div class="scrim" id="scrim">
+
+  <div class="modal-box" id="m-ask" hidden>
+    <div class="modal-head"><span class="no mono">01</span><h2>The Ask</h2><button class="x" data-close>&times;</button></div>
+    <div class="modal-body">
+      <div class="stat-row">
+        <div class="stat"><div class="sn">36</div><div class="sl">Support motions timed<br>intake to onboarding</div></div>
+        <div class="stat"><div class="sn">7</div><div class="sl">Phases across the<br>pre- and post-sale cycle</div></div>
+        <div class="stat warm"><div class="sn">0</div><div class="sl">Evidence behind the prior<br>year&rsquo;s headcount number</div></div>
+        <div class="stat"><div class="sn">30 min</div><div class="sl">Increment used for<br>every time study</div></div>
+      </div>
+      <p>Every September this healthcare wearables company set a new-bookings goal for the following
+      fiscal year. The sales side of capacity planning was arithmetic they already trusted: revenue goal,
+      average order size, productivity per seller, headcount.</p>
+      <p><b>The support side was not.</b> Customer support carried a heavy pre-sale and post-sale load in
+      this business &mdash; RFP construction, contracting, implementation, onboarding &mdash; and the
+      number of reps required to carry it had never been derived from anything. It was estimated year over
+      year and adjusted by feel.</p>
+      <p>That is an expensive way to be wrong in either direction. Overshoot and you carry salary against
+      work that doesn't exist. Undershoot and RFPs sit in a queue while sellers miss submission deadlines,
+      which surfaces as a pipeline problem months later and gets blamed on the sales team.</p>
+      <p class="note">The request was narrow, and I'd argue it was the right one: give us a concise,
+      defensible support headcount tied to the revenue plan, and let us change our own assumptions without
+      rebuilding the model.</p>
+    </div>
+  </div>
+
+  <div class="modal-box" id="m-method" hidden>
+    <div class="modal-head"><span class="no mono">02</span><h2>The Method</h2><button class="x" data-close>&times;</button></div>
+    <div class="modal-body">
+      <p>You cannot model a function you haven't documented. Before any math, I inventoried every motion a
+      CSR performed in support of their AE counterpart &mdash; from the moment an RFP arrived to a live,
+      onboarded customer &mdash; then timed them.</p>
+      <div class="flow">
+        <div class="fstep"><div class="fn mono">STEP 1</div><div class="ft">Shadow the work</div><div class="fd">Traced the actual path of an RFP, not the documented one.</div></div>
+        <div class="fstep"><div class="fn mono">STEP 2</div><div class="ft">Inventory motions</div><div class="fd">36 discrete motions across seven phases, each with a clear start and finish.</div></div>
+        <div class="fstep"><div class="fn mono">STEP 3</div><div class="ft">Time each one</div><div class="fd">Time study per motion, normalized to 30-minute increments.</div></div>
+        <div class="fstep"><div class="fn mono">STEP 4</div><div class="ft">Split by outcome</div><div class="fd">Pre-decision work hits every RFP. Contracting and implementation only on wins.</div></div>
+        <div class="fstep"><div class="fn mono">STEP 5</div><div class="ft">Make it editable</div><div class="fd">Every assumption exposed, so leaders argue with the model instead of the answer.</div></div>
+      </div>
+      <p><b>The 30-minute increment was deliberate.</b> Finer granularity implies a precision time studies
+      don't support, and it invites arguments about whether a task takes 18 minutes or 22. Half-hour blocks
+      kept the conversation on the shape of the work rather than the stopwatch.</p>
+      <p class="note">The other design requirement was durability. Routing tools, answer-bank automation
+      and AI drafting were all arriving. A model that assumed today's motion times would be wrong within a
+      year &mdash; so every motion had to be adjustable, and removable. Strike any motion in the workbench
+      and watch the headcount move.</p>
+      <p><b>How the math runs:</b> goal &divide; average order size gives deals to win. Wins &divide; win
+      rate gives RFPs to respond to. Total hours = (RFPs &times; pre-decision hours) + (wins &times;
+      win-only hours). FTEs = total hours &divide; (2,080 &times; productive utilization).</p>
+    </div>
+  </div>
+
+  <div class="modal-box" id="m-read" hidden>
+    <div class="modal-head"><span class="no mono">03</span><h2>How to Read It</h2><button class="x" data-close>&times;</button></div>
+    <div class="modal-body">
+      <div class="m2">
+        <div>
+          <p><b>It is a load model, not a productivity target.</b> It says how many hours the plan demands
+          and how many humans that implies. It does not tell you a rep is slow, and it should never be
+          pointed at an individual.</p>
+          <p><b>Losses are the expensive part.</b> At a 30% win rate, seven of every ten responses consume
+          the full pre-decision load and return nothing. That's the finding that tends to change the
+          conversation: support headcount is driven as much by bid discipline as by bookings.</p>
+        </div>
+        <div>
+          <p><b>Utilization is the assumption most models get wrong.</b> 2,080 hours is not a working year.
+          The slider sets the share actually available after PTO, holidays, training, meetings and
+          administrative time.</p>
+          <p><b>Every assumption is exposed on purpose.</b> A capacity number a CFO can't take apart is a
+          number they will overrule. When leaders move the inputs themselves, the debate moves off the
+          answer and onto the assumptions &mdash; the only debate worth having.</p>
+        </div>
+      </div>
+      <p class="note">Built in Excel during a RevIntel engagement and reconstructed here as an interactive
+      model. Motion names, timings and all figures are illustrative. Client data, volumes and results are
+      not shown.</p>
+    </div>
+  </div>
+
+  <div class="modal-box" id="m-take" hidden>
+    <div class="modal-head"><span class="no mono">04</span><h2>Takeaways</h2><button class="x" data-close>&times;</button></div>
+    <div class="modal-body">
+      <div class="tk-grid">
+        <div class="tk"><div class="n mono">01</div><h3>I replaced a guess with a derivation</h3>
+          <p>Support headcount had been estimated annually with nothing underneath it. Documenting and
+          timing 36 motions turned it into a number tied directly to the revenue plan &mdash; and one that
+          survives being questioned.</p></div>
+        <div class="tk"><div class="n mono">02</div><h3>The model had to outlive its assumptions</h3>
+          <p>Automation and AI were going to compress these motions. So every motion is adjustable and
+          removable. Planners test next year's tooling against this year's plan instead of waiting to find
+          out.</p></div>
+        <div class="tk"><div class="n mono">03</div><h3>It surfaced a finding nobody asked for</h3>
+          <p>Because losing RFPs costs nearly as much support load as winning them, win rate moves
+          headcount harder than bookings do. Capacity planning became an argument for qualification
+          discipline.</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+var reduce = matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+var PHASES = [
+ {n:'P1', t:'Intake & Qualification', win:false, c:'var(--ai)', s:'var(--ai-soft)', m:[
+   ['RFP intake, logging and source verification',0.5],
+   ['Bid / no-bid qualification review with the AE',1.0],
+   ['Requirements extraction and compliance matrix build',3.0],
+   ['Security, privacy and regulatory questionnaire triage',2.0],
+   ['Response kickoff call and ownership plan',1.0]]},
+ {n:'P2', t:'Response Construction', win:false, c:'var(--ai)', s:'var(--ai-soft)', m:[
+   ['Answer bank search and reuse pass',2.5],
+   ['Net-new narrative drafting',4.0],
+   ['Clinical and product SME question routing',2.0],
+   ['SME response chase and consolidation',2.5],
+   ['Pricing worksheet build with Deal Desk',1.5],
+   ['Device configuration and bill-of-materials validation',1.5],
+   ['Reference, outcome and case study assembly',1.0]]},
+ {n:'P3', t:'Review & Audit', win:false, c:'var(--ai)', s:'var(--ai-soft)', m:[
+   ['Internal compliance audit against the matrix',2.0],
+   ['Legal and regulatory language review',1.5],
+   ['Pricing and discount approval routing',1.0],
+   ['Executive review and sign-off',1.0],
+   ['Formatting, branding and document assembly',1.5],
+   ['Final QA and completeness check',1.0]]},
+ {n:'P4', t:'Distribution & Post-Submission', win:false, c:'var(--ai)', s:'var(--ai-soft)', m:[
+   ['Portal submission and receipt confirmation',0.5],
+   ['Buyer clarification and Q&A rounds',2.0],
+   ['Best-and-final offer revision',1.5],
+   ['Answer bank update and response post-mortem',1.0]]},
+ {n:'P5', t:'Contracting \u2014 wins only', win:true, c:'var(--blue)', s:'var(--blue-soft)', m:[
+   ['Contract package prep and redline intake',2.0],
+   ['Redline negotiation support cycles',3.0],
+   ['BAA and data processing agreement execution',1.5],
+   ['Signature routing and countersignature',1.0],
+   ['Booking packet, CRM closeout and handoff',1.5]]},
+ {n:'P6', t:'Implementation \u2014 wins only', win:true, c:'var(--blue)', s:'var(--blue-soft)', m:[
+   ['Implementation kickoff and scoping',2.0],
+   ['Device provisioning and logistics setup',3.0],
+   ['EHR and data integration coordination',4.0],
+   ['Clinical workflow configuration',3.0],
+   ['Validation testing and go-live readiness',2.5]]},
+ {n:'P7', t:'Onboarding \u2014 wins only', win:true, c:'var(--blue)', s:'var(--blue-soft)', m:[
+   ['End-user training delivery',3.0],
+   ['Administrator enablement and documentation',1.5],
+   ['30-day adoption check and issue resolution',2.0],
+   ['Handoff to ongoing Customer Success',1.0]]}
+];
+
+var M=[];
+PHASES.forEach(function(p,pi){ p.m.forEach(function(r,mi){
+  M.push({p:pi,i:mi,name:r[0],base:r[1],hrs:r[1],on:true,win:p.win});
+});});
+
+var HOURLY=75, YEAR=2080;
+function num(n){return n.toLocaleString('en-US');}
+function money(n){ return n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1e3?'$'+(n/1e3).toFixed(1)+'K':'$'+Math.round(n); }
+function preHours(){return M.filter(function(m){return !m.win&&m.on;}).reduce(function(a,m){return a+m.hrs;},0);}
+function postHours(){return M.filter(function(m){return m.win&&m.on;}).reduce(function(a,m){return a+m.hrs;},0);}
+function inputs(){return{
+  goal:parseFloat(document.getElementById('goal').value)*1e6,
+  aos:parseFloat(document.getElementById('aos').value)*1000,
+  wr:parseFloat(document.getElementById('wr').value)/100,
+  util:parseFloat(document.getElementById('util').value)/100};}
+function fteFor(wr){var v=inputs(),w=v.goal/v.aos,r=w/wr;return (r*preHours()+w*postHours())/(YEAR*v.util);}
+
+function render(){
+  var v=inputs(), wins=v.goal/v.aos, rfps=wins/v.wr;
+  var pre=preHours(), post=postHours();
+  var hours=rfps*pre+wins*post, cap=YEAR*v.util, fte=hours/cap;
+
+  document.getElementById('goal-v').textContent='$'+(v.goal/1e6).toFixed(1)+'M';
+  document.getElementById('aos-v').textContent='$'+Math.round(v.aos/1000)+'K';
+  document.getElementById('wr-v').textContent=Math.round(v.wr*100)+'%';
+  document.getElementById('util-v').textContent=Math.round(v.util*100)+'%';
+
+  document.getElementById('o-fte').textContent=Math.ceil(fte);
+  var hf=document.getElementById('h-fte'); if(hf) hf.textContent=Math.ceil(fte);
+  document.getElementById('o-fte-sub').textContent=num(Math.round(hours))+' productive hours \u00f7 '+num(Math.round(cap))+' per FTE';
+  document.getElementById('o-wins').textContent=num(Math.round(wins));
+  document.getElementById('o-rfps').textContent=num(Math.round(rfps));
+  document.getElementById('o-hours').textContent=num(Math.round(hours));
+  document.getElementById('o-pre').textContent=pre.toFixed(1);
+  document.getElementById('o-post').textContent=post.toFixed(1);
+  document.getElementById('o-cpw').textContent=money(hours*HOURLY/wins);
+
+  var base=Math.round(v.wr*100), out='';
+  [-10,-5,0,5,10].forEach(function(d){
+    var w=Math.min(95,Math.max(5,base+d));
+    out+='<div class="'+(d===0?'base':'')+'"><div class="wr mono">'+w+'%</div><div class="fte">'+Math.ceil(fteFor(w/100))+'</div></div>';
+  });
+  document.getElementById('sens').innerHTML=out;
+
+  PHASES.forEach(function(p,pi){
+    var t=M.filter(function(m){return m.p===pi&&m.on;}).reduce(function(a,m){return a+m.hrs;},0);
+    var el=document.getElementById('ps-'+pi); if(el) el.textContent=t.toFixed(1)+'h';
+  });
+  var tp=document.getElementById('tot-pre'), tq=document.getElementById('tot-post');
+  if(tp) tp.textContent=pre.toFixed(1)+' hours';
+  if(tq) tq.textContent=post.toFixed(1)+' hours';
+}
+
+/* build motions - ALL COLLAPSED ON LOAD */
+var host=document.getElementById('phases');
+(function(){
+  var html='';
+  PHASES.forEach(function(p,pi){
+    html+='<div class="phase collapsed" id="ph-'+pi+'">'+
+      '<div class="phase-head" style="--phc:'+p.c+';--ph:'+p.s+'" data-phase="'+pi+'" tabindex="0" role="button" aria-expanded="false">'+
+      '<span class="caret" id="cr-'+pi+'">+</span><span class="pn mono">'+p.n+'</span>'+
+      '<h4>'+p.t+'</h4><span class="cnt mono">'+p.m.length+'</span>'+
+      '<span class="ph-sum mono" id="ps-'+pi+'"></span></div>';
+    p.m.forEach(function(r,mi){
+      var idx=M.findIndex(function(m){return m.p===pi&&m.i===mi;});
+      html+='<div class="motion-row" id="mr-'+idx+'"><div class="mname">'+r[0]+'</div>'+
+        '<div class="stepper">'+
+        '<button type="button" data-act="dec" data-i="'+idx+'" aria-label="Decrease">&minus;</button>'+
+        '<span class="hrs mono" id="mh-'+idx+'">'+r[1].toFixed(1)+'h</span>'+
+        '<button type="button" data-act="inc" data-i="'+idx+'" aria-label="Increase">+</button>'+
+        '<button type="button" class="kill mono" data-act="kill" data-i="'+idx+'">STRIKE</button>'+
+        '</div></div>';
+    });
+    html+='</div>';
+    if(pi===3) html+='<div class="tot-row"><span class="l">Pre-decision load \u00b7 every RFP</span><span class="r" id="tot-pre"></span></div>';
+  });
+  html+='<div class="tot-row"><span class="l">Win-only load \u00b7 contracting to onboarding</span><span class="r" id="tot-post"></span></div>';
+  host.innerHTML=html;
+})();
+
+function togglePhase(el){
+  var pi=el.getAttribute('data-phase'), box=document.getElementById('ph-'+pi);
+  var col=box.classList.toggle('collapsed');
+  el.setAttribute('aria-expanded', col?'false':'true');
+  document.getElementById('cr-'+pi).textContent=col?'+':'\u2212';
+}
+host.addEventListener('click',function(e){
+  var ph=e.target.closest('.phase-head'); if(ph){togglePhase(ph);return;}
+  var b=e.target.closest('button[data-act]'); if(!b) return;
+  var i=+b.getAttribute('data-i'), m=M[i], a=b.getAttribute('data-act');
+  if(a==='inc') m.hrs=Math.min(20,m.hrs+0.5);
+  if(a==='dec') m.hrs=Math.max(0.5,m.hrs-0.5);
+  if(a==='kill'){m.on=!m.on;document.getElementById('mr-'+i).classList.toggle('off',!m.on);}
+  document.getElementById('mh-'+i).textContent=m.hrs.toFixed(1)+'h';
+  render();
+});
+host.addEventListener('keydown',function(e){
+  var ph=e.target.closest('.phase-head');
+  if(ph&&(e.key==='Enter'||e.key===' ')){e.preventDefault();togglePhase(ph);}
+});
+
+/* presets */
+var PRESETS={
+ base:{goal:36,aos:120,wr:30,util:72,kill:[],scale:{}},
+ ai:{goal:36,aos:120,wr:33,util:72,
+     kill:['Answer bank search and reuse pass','Formatting, branding and document assembly'],
+     scale:{'Net-new narrative drafting':0.5,'SME response chase and consolidation':0.5,
+            'Requirements extraction and compliance matrix build':0.5,
+            'Answer bank update and response post-mortem':0.5}},
+ routing:{goal:36,aos:120,wr:30,util:76,
+     kill:['Signature routing and countersignature','Pricing and discount approval routing'],
+     scale:{'RFP intake, logging and source verification':0.5,
+            'Clinical and product SME question routing':0.5,
+            'Booking packet, CRM closeout and handoff':0.5}},
+ growth:{goal:60,aos:120,wr:26,util:72,kill:[],scale:{}}
+};
+document.querySelectorAll('.preset').forEach(function(b){
+  b.addEventListener('click',function(){
+    var key=b.getAttribute('data-preset');
+    if(key==='expand'){
+      var anyClosed=[].slice.call(document.querySelectorAll('.phase')).some(function(p){return p.classList.contains('collapsed');});
+      document.querySelectorAll('.phase-head').forEach(function(h){
+        var pi=h.getAttribute('data-phase'), box=document.getElementById('ph-'+pi);
+        box.classList.toggle('collapsed',!anyClosed);
+        h.setAttribute('aria-expanded',anyClosed?'true':'false');
+        document.getElementById('cr-'+pi).textContent=anyClosed?'\u2212':'+';
+      });
+      b.textContent=anyClosed?'Collapse all':'Expand all';
+      return;
+    }
+    document.querySelectorAll('.preset').forEach(function(x){
+      if(x.getAttribute('data-preset')!=='expand') x.classList.remove('on');
+    });
+    b.classList.add('on');
+    var P=PRESETS[key];
+    document.getElementById('goal').value=P.goal;
+    document.getElementById('aos').value=P.aos;
+    document.getElementById('wr').value=P.wr;
+    document.getElementById('util').value=P.util;
+    M.forEach(function(m,i){
+      m.hrs=m.base; m.on=true;
+      if(P.scale[m.name]) m.hrs=Math.max(0.5,Math.round(m.base*P.scale[m.name]*2)/2);
+      if(P.kill.indexOf(m.name)>-1) m.on=false;
+      document.getElementById('mh-'+i).textContent=m.hrs.toFixed(1)+'h';
+      document.getElementById('mr-'+i).classList.toggle('off',!m.on);
+    });
+    render();
+  });
+});
+
+['goal','aos','wr','util'].forEach(function(id){
+  document.getElementById(id).addEventListener('input',render);
+});
+
+/* modals */
+var scrim=document.getElementById('scrim'), lastFocus=null;
+function openModal(id){
+  lastFocus=document.activeElement;
+  scrim.querySelectorAll('.modal-box').forEach(function(m){m.hidden=(m.id!==id);});
+  scrim.classList.add('open');
+  var box=document.getElementById(id);
+  box.querySelector('.x').focus();
+}
+function closeModal(){
+  scrim.classList.remove('open');
+  scrim.querySelectorAll('.modal-box').forEach(function(m){m.hidden=true;});
+  if(lastFocus) lastFocus.focus();
+}
+document.querySelectorAll('[data-modal]').forEach(function(b){
+  b.addEventListener('click',function(){openModal(b.getAttribute('data-modal'));});
+});
+scrim.addEventListener('click',function(e){
+  if(e.target===scrim||e.target.closest('[data-close]')) closeModal();
+});
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&scrim.classList.contains('open')) closeModal(); });
+
+/* mobile tabs */
+function setTab(t){
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===t);});
+  document.getElementById('pane-dash').classList.toggle('hide',t!=='dash');
+  document.getElementById('pane-mot').classList.toggle('hide',t!=='mot');
+}
+document.querySelectorAll('.tab').forEach(function(b){
+  b.addEventListener('click',function(){setTab(b.getAttribute('data-tab'));});
+});
+function syncPanes(){
+  if(window.innerWidth>1080){
+    document.getElementById('pane-dash').classList.remove('hide');
+    document.getElementById('pane-mot').classList.remove('hide');
+  } else {
+    var on=document.querySelector('.tab.on');
+    setTab(on?on.getAttribute('data-tab'):'dash');
+  }
+}
+window.addEventListener('resize',syncPanes);
+syncPanes();
+render();
+})();
+</script>
+</body>
+</html>
