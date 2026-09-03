@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>Revenue Planning &amp; Scenario Model | Jason Dommel</title>
+<meta name="description" content="Interactive reconstruction of a forward-looking revenue planning and scenario model built for executive and board-level annual planning.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F5; --card:#F8FAFC; --white:#FFFFFF; --ink:#111B33; --ink2:#1E2C4C;
+  --muted:#56637E; --faint:#8A94AB; --rule:#CFD6E2; --rule-soft:#DFE4EC;
+  --ai:#12856A; --ai-bright:#1FB891; --ai-soft:#DCEEE8;
+  --no:#A63D22; --no-soft:#F4E2DB;
+  --hold:#8A6212; --hold-soft:#F1E8D4;
+  --blue:#2A5FA8; --blue-soft:#DEE7F4;
+  --mono:'IBM Plex Mono',ui-monospace,monospace; --serif:'Source Serif 4',Georgia,serif; --disp:'Archivo',sans-serif;
+  --bg:var(--paper); --sub:var(--card); --teal:var(--ai); --teal-soft:var(--ai-soft); --amber:var(--hold); --amber-soft:var(--hold-soft); --red:var(--no); --red-soft:var(--no-soft); --rule2:var(--rule); --slate:var(--ink2); --slate-soft:var(--rule-soft); --sans:var(--serif);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:light only;background:var(--bg);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--serif);font-size:14.5px;line-height:1.55;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3,h4{font-family:var(--disp);font-weight:800;letter-spacing:-.01em;line-height:1.15;text-transform:uppercase}
+.mono{font-family:var(--mono)}
+.serif{font-family:var(--serif)}
+.wrap{max-width:1400px;margin:0 auto;padding:0 24px}
+a{color:var(--ai)}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:60;background:var(--card);border-bottom:2px solid var(--ink)}
+.topbar .wrap{display:flex;align-items:center;gap:14px;height:58px}
+.brand{font-family:var(--disp);font-weight:900;font-size:17px;letter-spacing:-.005em;text-transform:uppercase;white-space:nowrap;line-height:1.05}
+.brand span{color:var(--ai)}
+.tb-group{display:flex;align-items:center;gap:6px}
+.tb-group + .tb-group{margin-left:6px;padding-left:12px;border-left:1px solid var(--rule)}
+.tb-lab{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-right:2px}
+.seg{display:inline-flex;border:1px solid var(--rule);overflow:hidden;background:#fff}
+.seg button{background:none;border:none;border-right:1px solid var(--rule);padding:6px 11px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--ink);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--ai);outline-offset:-2px}
+.tbtn{background:#fff;border:1px solid var(--rule);padding:6px 10px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;color:var(--muted);white-space:nowrap}
+.tbtn:hover{border-color:var(--ai);color:var(--ai)}
+.tbtn:focus-visible{outline:2px solid var(--ai);outline-offset:1px}
+.tbtn.danger:hover{border-color:var(--red);color:var(--red)}
+.tb-right{margin-left:auto;display:flex;gap:6px;align-items:center}
+@media(max-width:1000px){.tb-lab{display:none}.brand{font-size:11px}}
+
+/* ---------- section nav ---------- */
+.subnav{background:var(--card);border-bottom:1px solid var(--rule);position:sticky;top:58px;z-index:55}
+.subnav .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;height:38px;align-items:center}
+.subnav .wrap::-webkit-scrollbar{display:none}
+.subnav button{background:none;border:none;border-bottom:2px solid transparent;padding:9px 10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;white-space:nowrap}
+.subnav button.on{color:var(--ai);border-bottom-color:var(--ai)}
+.subnav button:hover{color:var(--ink)}
+
+/* ---------- hero ---------- */
+.hero{padding:40px 0 30px;border-bottom:1px solid var(--rule);background:var(--card)}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ai);margin-bottom:12px}
+.hero h1{font-size:clamp(30px,5vw,54px);font-weight:900;line-height:1.02;letter-spacing:-.015em;max-width:19ch}
+.hero .sub{font-family:var(--serif);font-size:18px;color:var(--muted);margin-top:12px;max-width:62ch}
+.disclose{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:16px;max-width:90ch;line-height:1.5}
+.qa{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:18px;align-items:center;margin:26px 0 8px;padding:18px 22px;border:1px solid var(--rule);background:var(--sub);}
+.qa .qn{font-family:var(--disp);font-weight:800;font-size:clamp(24px,3vw,36px);letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.qa .ql{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.qa .qs{font-size:11.5px;color:var(--faint);margin-top:5px}
+.qa .arrow{font-size:22px;color:var(--faint)}
+.qa .known{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--ai);border:1px solid var(--ai);padding:1px 6px;margin-left:6px;vertical-align:middle}
+@media(max-width:820px){.qa{grid-template-columns:1fr;gap:10px}.qa .arrow{display:none}}
+.mp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+@media(max-width:820px){.mp{grid-template-columns:1fr}}
+.mp .cell{border:1px solid var(--rule);background:#fff;padding:14px 16px;border-top:3px solid var(--ai)}
+.mp .cell.w{border-top-color:var(--blue)}
+.mp .cell.g{border-top-color:var(--hold)}
+.mp .ql{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.mp .qn{font-family:var(--disp);font-weight:800;font-size:30px;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
+.mp .qs{font-size:11.5px;color:var(--faint);margin-top:3px}
+.bigq{font-family:var(--disp);font-weight:800;font-size:clamp(19px,2.6vw,28px);margin-top:26px;letter-spacing:-.01em;text-transform:uppercase}
+.bigq small{display:block;font-family:var(--serif);font-weight:400;font-size:15px;color:var(--muted);margin-top:8px;letter-spacing:0;text-transform:none;max-width:78ch}
+
+/* ---------- sections ---------- */
+section.sec{padding:40px 0 8px;scroll-margin-top:156px}
+.sec-h{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:20px}
+.sec-h .no{font-family:var(--mono);font-size:11px;color:var(--ai);letter-spacing:.1em}
+.sec-h h2{font-size:clamp(17px,2.2vw,22px)}
+.sec-h .meta{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.sec-h .rst{background:none;border:1px solid var(--rule2);padding:3px 8px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;margin-left:10px}
+.sec-h .rst:hover{color:var(--no);border-color:var(--no)}
+.lede{font-family:var(--serif);font-size:15px;color:var(--ink2);max-width:76ch;margin-bottom:16px}
+.lede b{font-weight:600}
+.note{font-size:13px;color:var(--muted);border-left:3px solid var(--ai);padding-left:12px;max-width:82ch;margin:10px 0 14px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.cols2,.cols3{grid-template-columns:1fr}}
+
+/* ---------- KPI blocks ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{border:1px solid var(--rule);background:#fff;padding:12px 14px;}
+.kpi .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--disp);font-weight:800;font-size:22px;margin-top:4px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11px;color:var(--faint);margin-top:2px}
+.kpi.acc{border-top-color:var(--ai)} .kpi.acc .v{color:var(--ai)} .kpi.teal{border-top-color:var(--blue)} .kpi.teal .v{color:var(--blue)} .kpi.amber{border-top-color:var(--hold)} .kpi.amber .v{color:var(--hold)} .kpi.red{border-top-color:var(--no)} .kpi.red .v{color:var(--no)}
+
+/* ---------- fields ---------- */
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:10px;margin-bottom:14px}
+.f{border:1px solid var(--rule);background:#fff;padding:8px 10px;position:relative}
+.f label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;line-height:1.3}
+.f .in{display:flex;align-items:center;gap:5px}
+.f input,.f select{width:100%;border:1px solid var(--rule);padding:5px 7px;font-family:var(--mono);font-size:12.5px;background:#fff;min-width:0;font-variant-numeric:tabular-nums}
+.f input:focus,.f select:focus{outline:2px solid var(--ai);outline-offset:-1px;border-color:var(--ai)}
+.f .u{font-family:var(--mono);font-size:10.5px;color:var(--faint);flex:0 0 auto}
+.f .tag{position:absolute;top:6px;right:8px;font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;padding:1px 5px;}
+.tag.k{color:var(--ai);border:1px solid var(--ai)} .tag.p{color:var(--hold);border:1px solid var(--hold)} .tag.i{color:var(--faint);border:1px solid var(--rule)} .tag.o{color:var(--blue);border:1px solid var(--blue)}
+.f .h{font-size:10.5px;color:var(--faint);margin-top:4px;line-height:1.35}
+.f.calc{background:var(--card);border-top:2px solid var(--ai)}
+.f.calc .cv{font-family:var(--disp);font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;padding:3px 0}
+
+/* ---------- tables ---------- */
+.tblwrap{overflow-x:auto;border:1px solid var(--rule);background:#fff;margin-bottom:12px}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+.tbl th{background:var(--sub);font-family:var(--mono);font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:8px 8px;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap;font-weight:500}
+.tbl td{padding:5px 8px;border-bottom:1px solid var(--rule);vertical-align:middle;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.tbl input,.tbl select{border:1px solid var(--rule);padding:4px 6px;font-family:var(--mono);font-size:12px;background:#fff;width:100%;min-width:64px;font-variant-numeric:tabular-nums}
+.tbl input[type=text]{min-width:120px}
+.tbl input:focus,.tbl select:focus{outline:2px solid var(--ai);outline-offset:-1px}
+.tbl td.c{font-family:var(--mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums;background:var(--card)}
+.tbl td.c.pos{color:var(--ai)} .tbl td.c.neg{color:var(--no)}
+.tbl td.act{text-align:right}
+.tbl tfoot td{background:var(--sub);font-family:var(--mono);font-size:12px;font-weight:600;text-align:right}
+.tbl tfoot td:first-child{text-align:left;font-family:var(--sans)}
+.ib{background:none;border:1px solid var(--rule2);width:24px;height:24px;font-size:12px;cursor:pointer;color:var(--muted);margin-left:2px}
+.ib:hover{border-color:var(--ai);color:var(--ai)} .ib.del:hover{border-color:var(--no);color:var(--no)}
+.addrow{background:none;border:1px dashed var(--rule);padding:6px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);cursor:pointer;margin-bottom:12px}
+.addrow:hover{border-color:var(--ai);color:var(--ai)}
+.pill{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border:1px solid currentColor}
+.pill.sub{color:var(--hold)} .pill.ok{color:var(--ai)} .pill.rec{color:var(--blue)}
+
+/* ---------- charts ---------- */
+.chart{background:#fff;border:1px solid var(--rule);border-top:2px solid var(--ink);padding:14px 14px 8px;margin-bottom:14px}
+.chart h4{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:8px;font-size:11px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;background:var(--c);margin-right:6px;vertical-align:-1px}
+.svg-lab{font-family:var(--mono);font-size:10px;fill:#56637E}
+.svg-val{font-family:var(--mono);font-size:10px;fill:#111B33;font-weight:600}
+.svg-ax{stroke:#CFD6E2;stroke-width:1}
+
+/* ---------- misc components ---------- */
+.status{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:6px 11px;border:1px solid var(--rule2);background:#fff}
+.status i{width:9px;height:9px;background:var(--faint);display:inline-block}
+.status.s0 i{background:var(--no)} .status.s1 i{background:var(--hold)} .status.s2 i{background:var(--ai)} .status.s3 i{background:var(--blue)}
+.bar{height:10px;background:var(--rule);overflow:hidden;display:flex}
+.bar i{height:100%;display:block}
+.deps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:14px}
+.dep{border:1px solid var(--rule);background:#fff;padding:10px 12px;}
+.dep .l{font-size:12px;color:var(--ink2)}
+.dep .v{font-family:var(--disp);font-weight:700;font-size:20px;margin:2px 0 6px;font-variant-numeric:tabular-nums}
+.dep .cert{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+.c-more{color:var(--ai)} .c-mod{color:var(--blue)} .c-exec{color:var(--hold)} .c-high{color:var(--no)}
+.lifecycle{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:14px 0}
+@media(max-width:1000px){.lifecycle{grid-template-columns:repeat(4,1fr)}}
+.lc{border:1px solid var(--rule);background:#fff;padding:10px 8px;text-align:center;position:relative}
+.lc .n{font-family:var(--mono);font-size:9px;color:var(--faint);letter-spacing:.1em}
+.lc .t{font-family:var(--disp);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-top:4px;line-height:1.25}
+.lc.on{border-color:var(--blue);background:var(--blue-soft)}
+.lc.done{border-color:var(--ai);background:var(--ai-soft)}
+.lc.var{border-style:dashed;border-color:var(--hold)}
+.arch{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+@media(max-width:900px){.arch{grid-template-columns:1fr 1fr}}
+.ab{border:1px solid var(--rule);background:#fff;border-top:3px solid var(--slate);padding:11px 13px;}
+.ab h4{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2);font-weight:600;margin-bottom:6px}
+.ab ul{list-style:none;font-size:12px;color:var(--ink2);line-height:1.6}
+.ab.blue{border-top-color:var(--blue)} .ab.blue h4{color:var(--blue)}
+.ab.teal{border-top-color:var(--ai)} .ab.teal h4{color:var(--ai)}
+.ab.amber{border-top-color:var(--hold)} .ab.amber h4{color:var(--hold)}
+.ab.red{border-top-color:var(--no)} .ab.red h4{color:var(--no)}
+.flowline{text-align:center;font-family:var(--mono);font-size:11px;color:var(--faint);padding:4px 0}
+.callout{border:1px solid var(--ai);border-left:4px solid var(--ai);background:var(--ai-soft);padding:14px 18px;font-family:var(--serif);font-size:15.5px;color:var(--ink);max-width:80ch;margin:14px 0}
+.callout b{font-weight:600}
+.risk{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--rule);background:#fff;margin-bottom:6px}
+.risk .lv{font-family:var(--mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;padding:2px 6px;flex:0 0 auto;margin-top:2px}
+.risk .lv.High{color:var(--no);border:1px solid var(--no)} .risk .lv.Medium{color:var(--hold);border:1px solid var(--hold)} .risk .lv.Low{color:var(--ai);border:1px solid var(--ai)}
+.risk .tx{font-size:13px;color:var(--ink2)}
+.qrow{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--rule);background:#fff;margin-bottom:6px}
+.qrow .q{font-size:13px}
+.qrow .qn{font-size:11px;color:var(--faint);margin-top:2px}
+.qrow .v{font-family:var(--disp);font-weight:800;font-size:20px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ai)}
+.sens{display:grid;grid-template-columns:minmax(0,1fr) 140px 90px;gap:10px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--rule);font-size:12.5px}
+.sens:last-child{border-bottom:none}
+.sens .b{height:8px;}
+.sens .d{font-family:var(--mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.sens .d.pos{color:var(--ai)} .sens .d.neg{color:var(--no)}
+.box{border:1px solid var(--rule);background:#fff;padding:14px 16px;margin-bottom:14px}
+.box h3{font-size:13px;margin-bottom:8px}
+.diff{font-family:var(--mono);font-size:11.5px;line-height:1.7;color:var(--ink2)}
+.diff b{color:var(--ai);font-weight:600}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;user-select:none}
+.toggle input{width:16px;height:16px;accent-color:var(--ai)}
+.togglerow{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:14px;padding:10px 12px;border:1px solid var(--rule);background:#fff;}
+.chipset{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chipset button{background:#fff;border:1px solid var(--rule);padding:5px 9px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
+.chipset button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.msg{font-family:var(--mono);font-size:11px;color:var(--ai);margin-left:8px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:900px){.three{grid-template-columns:1fr}}
+.three .u{border:1px solid var(--rule);background:#fff;padding:14px 16px;border-top:2px solid var(--ai)}
+.three .u:nth-child(2){border-top-color:var(--hold)} .three .u:nth-child(3){border-top-color:var(--blue)}
+.three h3{font-size:13px;margin-bottom:6px}
+.three p{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.three ul{font-size:12px;color:var(--ink2);padding-left:16px;line-height:1.6}
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.ba{grid-template-columns:1fr}}
+.ba .b{border:1px solid var(--rule);background:#fff;padding:16px 18px;}
+.ba h3{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);margin-bottom:10px;font-weight:500}
+.ba p{font-family:var(--serif);font-size:14px;color:var(--ink2);margin-bottom:8px}
+.ba ul{font-size:12.5px;color:var(--ink2);columns:2;column-gap:20px;padding-left:16px;line-height:1.7}
+.foot{border-top:2px solid var(--ink);padding:26px 0 40px;font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6;background:var(--card)}
+.hidden{display:none!important}
+body.board .op-only{display:none!important}
+body.board .sec-h .rst,body.board .fields,body.board .addrow,body.board .togglerow{display:none!important}
+body.board section.sec{padding:30px 0 4px}
+.reg-filter{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.reg-filter input{border:1px solid var(--rule);padding:6px 9px;font-family:var(--mono);font-size:12px;min-width:220px}
+.reg-filter select{border:1px solid var(--rule);padding:6px 9px;font-family:var(--mono);font-size:12px}
+[data-tip]{position:relative;cursor:help;border-bottom:1px dotted var(--faint)}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:80;background:var(--ink);color:#fff;font-family:var(--mono);font-size:10.5px;line-height:1.45;padding:7px 9px;width:max-content;max-width:300px;white-space:normal;pointer-events:none;letter-spacing:0;text-transform:none}
+@media print{
+  .topbar,.subnav,.sec-h .rst,.addrow,.tb-right,.togglerow{display:none!important}
+  body{background:#fff;font-size:12px}
+  section.sec{page-break-inside:avoid;padding:18px 0 4px}
+  .hero{padding:16px 0}
+  .fields,.tblwrap,.chart,.box,.kpi,.dep{break-inside:avoid}
+  .tbl input,.tbl select,.f input,.f select{border:none;padding:0;background:transparent}
+}
+
+/* ---------- sticky model strip ---------- */
+.dash{position:sticky;top:96px;z-index:54;background:var(--ink);color:#fff;border-bottom:1px solid var(--ink)}
+.dash .wrap{display:flex;align-items:center;gap:0;height:46px;overflow-x:auto;scrollbar-width:none}
+.dash .wrap::-webkit-scrollbar{display:none}
+.dash .d{display:flex;align-items:baseline;gap:8px;padding:0 18px;border-right:1px solid rgba(255,255,255,.14);white-space:nowrap}
+.dash .d:first-child{padding-left:0}
+.dash .d:last-child{border-right:none}
+.dash .dl{font-family:var(--mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.dash .dv{font-family:var(--disp);font-weight:800;font-size:17px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.dash .dv.ai{color:var(--ai-bright)} .dash .dv.hold{color:#E6B95A} .dash .dv.no{color:#F0917A}
+.dash .ds{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.55)}
+.dash .dstat{margin-left:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;padding:4px 9px;border:1px solid rgba(255,255,255,.35);white-space:nowrap}
+.dash .dstat.s0{border-color:#F0917A;color:#F0917A} .dash .dstat.s1{border-color:#E6B95A;color:#E6B95A} .dash .dstat.s2{border-color:var(--ai-bright);color:var(--ai-bright)} .dash .dstat.s3{border-color:#8FB3E8;color:#8FB3E8}
+@media(max-width:760px){.dash .d.opt{display:none}}
+/* ---------- guide ---------- */
+.gd{background:none;border:1px solid var(--ai);color:var(--ai);font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;cursor:pointer;margin-left:10px;white-space:nowrap}
+.gd:hover{background:var(--ai);color:#fff}
+.gd.sm{margin-left:4px;padding:3px 7px}
+.modal{position:fixed;inset:0;z-index:100;background:rgba(17,27,51,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal[hidden]{display:none!important}
+.modal-box{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--ai);max-width:720px;width:100%;max-height:86vh;overflow:auto;padding:22px 26px 24px;position:relative}
+.modal-box[hidden]{display:none!important}
+.modal-box .mk{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ai);margin-bottom:6px}
+.modal-box h3{font-size:20px;margin-bottom:14px}
+.modal-box h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px;font-weight:600}
+.modal-box p{font-family:var(--serif);font-size:15px;line-height:1.6;color:var(--ink2)}
+.modal-box .x{position:absolute;top:12px;right:12px;background:none;border:1px solid var(--rule);width:28px;height:28px;font-size:16px;cursor:pointer;color:var(--muted)}
+.modal-box .x:hover{border-color:var(--no);color:var(--no)}
+.modal-box .mnav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--rule)}
+.gindex{list-style:none;columns:2;column-gap:24px}
+.gindex li{break-inside:avoid;margin-bottom:4px}
+.gindex button{background:none;border:none;text-align:left;cursor:pointer;font-family:var(--serif);font-size:14px;color:var(--ink2);padding:3px 0;display:flex;gap:8px;align-items:baseline}
+.gindex button span{font-family:var(--mono);font-size:10px;color:var(--ai);letter-spacing:.06em}
+.gindex button:hover{color:var(--ai)}
+@media(max-width:700px){.gindex{columns:1}}
+/* ---------- board view: outputs only ---------- */
+body.board .board-hide{display:none!important}
+body.board #sens .sens:nth-child(n+6),body.board #risks .risk:nth-child(n+6){display:none!important}
+body.board #s-scenarios .cols2{display:none!important}
+.board-only{display:none}
+body.board .board-only{display:block}
+.majors{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:12px 0 4px}
+.majors .m{border:1px solid var(--rule);background:#fff;padding:8px 10px}
+.majors .m .l{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.majors .m .v{font-family:var(--mono);font-size:13px;font-weight:600;margin-top:2px}
+@media print{.dash{position:static;background:#fff;color:var(--ink);border:1px solid var(--rule)}.dash .dl,.dash .ds{color:var(--muted)}.gd,.modal{display:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">Revenue <span>Planning Model</span></div>
+    <div class="tb-group"><span class="tb-lab">View</span>
+      <div class="seg" id="viewseg"><button data-v="operator" class="on">Operator</button><button data-v="board">Board</button></div><button class="gd sm" data-guide="34" title="What is the difference?">?</button>
+    </div>
+    <div class="tb-group"><span class="tb-lab">Scenario</span>
+      <div class="seg" id="scenseg"><button data-s="conservative">Conservative</button><button data-s="base" class="on">Base</button><button data-s="upside">Upside</button><button data-s="custom">Custom</button></div>
+    </div>
+    <div class="tb-right">
+      <button class="tbtn" id="btn-guide" style="border-color:var(--ai);color:var(--ai)">Guide</button>
+      <button class="tbtn" id="btn-save">Save custom</button>
+      <button class="tbtn" id="btn-export">Export JSON</button>
+      <button class="tbtn" id="btn-import">Import JSON</button>
+      <input type="file" id="file-import" accept="application/json" class="hidden">
+      <button class="tbtn" id="btn-print">Print / PDF</button>
+      <button class="tbtn danger" id="btn-reset">Reset to case study</button>
+      <span class="msg" id="msg"></span>
+    </div>
+  </div>
+</div>
+<div class="subnav"><div class="wrap" id="subnav"></div></div>
+<div class="dash" id="dash"><div class="wrap">
+  <div class="d"><span class="dl">Projection</span><span class="dv ai" id="d-proj">—</span></div>
+  <div class="d"><span class="dl">Gap</span><span class="dv hold" id="d-gap">—</span></div>
+  <div class="d opt"><span class="dl">Weighted</span><span class="dv" id="d-w">—</span><span class="ds" id="d-wgap"></span></div>
+  <div class="d opt"><span class="dl">Target</span><span class="dv" id="d-target">—</span></div>
+  <div class="d opt"><span class="dl">Coverage</span><span class="dv" id="d-cov">—</span></div>
+  <div class="d opt"><span class="dl">Scenario</span><span class="dv" id="d-scen" style="font-size:13px">—</span></div>
+  <span class="dstat" id="d-status">—</span>
+</div></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">RevIntel client &middot; Healthcare SaaS &middot; Jason Dommel &middot; 2026 annual planning &middot; illustrative data</div>
+    <h1>Revenue Planning &amp; Scenario Model</h1>
+    <p class="sub">Building a forward-looking revenue ecosystem for executive and board-level planning.</p>
+    <p class="disclose">Interactive reconstruction of a revenue planning model developed for a healthcare SaaS client (via RevIntel) in 2025.
+    Certain values and assumptions have been normalized or made illustrative for portfolio purposes. Values marked
+    <span class="tag k">Known</span> are historical planning references from the original engagement; everything else is a
+    <span class="tag p">Planning</span> or <span class="tag i">Illustrative</span> assumption and can be edited. This application did not exist in 2025; it recreates the logic of the original HubSpot, Finance and Excel ecosystem.</p>
+
+    <div class="qa">
+      <div><div class="ql">2025 projected</div><div class="qn">$10.6M<span class="known">Known</span></div><div class="qs">Finance-reconciled trajectory at planning time</div></div>
+      <div class="arrow">&rarr;</div>
+      <div><div class="ql">2026 target</div><div class="qn" id="h-target">$20.0M</div><div class="qs">Board / planning expectation <span class="known">Known</span> &middot; editable below</div></div>
+      <div class="arrow">&rarr;</div>
+      <div><div class="ql">Growth required</div><div class="qn" id="h-req">+88.7%</div><div class="qs" id="h-reqgap">$9.4M of new revenue in twelve months</div></div>
+    </div>
+    <div class="mp">
+      <div class="cell"><div class="ql">Model projection</div><div class="qn" id="h-proj">—</div><div class="qs">Sum of every modeled source, unweighted</div></div>
+      <div class="cell w"><div class="ql">Confidence-weighted</div><div class="qn" id="h-weighted">—</div><div class="qs">Each source &times; its confidence factor</div></div>
+      <div class="cell g"><div class="ql">Remaining gap</div><div class="qn" id="h-gap">—</div><div class="qs" id="h-gapsub">Target minus model projection</div></div>
+    </div>
+    <div class="bigq">What has to be true for the business to reach <span id="h-target2">$20M</span>?
+      <small>Everything below exists to answer that question. A revenue target is not a plan &mdash; a plan says where the revenue comes from, what has to happen, when it lands, and how much of it rests on assumptions not yet realized.</small></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- 01 INTRO -->
+<section class="sec" id="s-intro">
+  <div class="sec-h"><span class="no">01</span><h2>The Situation</h2><span class="meta">Case study</span></div>
+  <div class="cols2">
+    <div>
+      <p class="lede">In 2025 the company needed more than a traditional sales forecast. Revenue existed across recognized
+      business, contracted programs awaiting execution, member-based program economics, and commercial pipeline. I built
+      an operating model that connected these states and later expanded it into the foundation for 2026 annual planning.</p>
+      <p class="lede">The 2026 planning question was straightforward but difficult: <b>could a business projected to finish
+      2025 at $10.6M credibly support a $20M revenue expectation?</b></p>
+    </div>
+    <div>
+      <p class="lede">Historically, planning had relied heavily on prior-year performance and management judgment. The new
+      model allowed leadership to test the Board-level expectation against the actual mechanics of the business &mdash;
+      and to separate three things that usually get blurred together:</p>
+      <div class="three">
+        <div class="u"><h3>Mathematical possibility</h3><p>The assumptions can theoretically sum to the target.</p></div>
+        <div class="u"><h3>Operational credibility</h3><p>The business can reasonably execute those assumptions on time.</p></div>
+        <div class="u"><h3>Confidence-weighted expectation</h3><p>The target accounts for uncertainty and execution risk.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 SCORECARD -->
+<section class="sec" id="s-score">
+  <div class="sec-h"><span class="no">02</span><h2>Executive Scorecard</h2><span class="meta">Live</span></div>
+  <div class="fields op-only" id="f-target"></div>
+  <div class="kpis" id="scorecard"></div>
+  <div class="board-only"><div class="eyebrow" style="margin-top:6px">Major assumptions</div><div class="majors" id="majors"></div></div>
+  <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+    <span class="status" id="status"><i></i><span>—</span></span>
+    <span style="font-size:12px;color:var(--muted)">Status bands: Below Plan &lt; 90% &middot; Near Plan 90&ndash;98% &middot; At Plan 98&ndash;103% &middot; Above Plan &gt; 103% of target (unweighted).</span>
+  </div>
+</section>
+
+<!-- 03 PLAN SUPPORTED -->
+<section class="sec" id="s-support">
+  <div class="sec-h"><span class="no">03</span><h2>Is the 2026 Plan Supported?</h2><span class="meta">Dependency analysis</span></div>
+  <p class="lede">The question is not only whether the model reaches the target, but <b>what proportion of the plan relies
+  on assumptions that have not yet been realized.</b> Each share below is expressed against the target.</p>
+  <div class="kpis" id="support-kpis"></div>
+  <div class="deps" id="deps"></div>
+  <div class="cols2">
+    <div class="chart"><h4>Certainty mix of projected revenue</h4><div id="ch-cert"></div></div>
+    <div class="box"><h3>Plan confidence score <span class="tag i" style="position:static;margin-left:6px">Illustrative portfolio metric</span></h3>
+      <div class="kpi" style="margin-bottom:10px"><div class="l">Composite score</div><div class="v" id="planscore">—</div><div class="s">Weighted blend of coverage, certainty mix and timing profile. Not a methodology used historically; weights are editable.</div></div>
+      <div class="fields op-only" id="f-weights"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 BRIDGE -->
+<section class="sec" id="s-bridge">
+  <div class="sec-h"><span class="no">04</span><h2>Revenue Bridge</h2><span class="meta">Waterfall to projected 2026</span></div>
+  <p class="note">The bridge starts from the 2026 carry-forward of existing recognized business rather than adding sources on top of the 2025 total, which would double-count. The 2025 baseline and the target are shown as reference lines. Toggle any source off to see the plan without it.</p>
+  <div class="togglerow op-only" id="toggles"></div>
+  <div class="chart"><h4>2026 revenue bridge</h4><div id="ch-bridge"></div></div>
+</section>
+
+<!-- 05 SEGMENTS -->
+<section class="sec" id="s-segments">
+  <div class="sec-h"><span class="no">05</span><h2>Revenue Mix by Segment</h2><span class="meta">Recognized &middot; contracted &middot; pipeline</span><button class="rst" data-reset="segments">Reset section</button></div>
+  <p class="note">Payer and provider average deal sizes are known planning references from the engagement and remain editable for scenario testing. Segment pipeline is probability-weighted and recognized ratably from go-live (close quarter midpoint plus implementation delay) &mdash; it is never treated as full-year revenue.</p>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-segments"></table></div>
+  <button class="addrow op-only" data-add="segments">+ Add user-defined segment</button>
+  <div class="chart"><h4>Projected revenue by segment and state</h4><div id="ch-seg"></div></div>
+</section>
+
+<!-- 06 MEMBER PROGRAMS -->
+<section class="sec" id="s-member">
+  <div class="sec-h"><span class="no">06</span><h2>Member-Based Program Revenue</h2><span class="meta">Contracted &ne; fixed</span><button class="rst" data-reset="programs">Reset section</button></div>
+  <div class="callout"><b>Signed did not always mean fixed.</b> For member-based programs, final revenue depended on actual program
+  population. The model therefore had to account for post-contract volume variance as well as traditional sales-pipeline uncertainty.
+  Customer Operations typically received the member eligibility file within about two weeks of program start; until then the model planned on expected membership.</div>
+  <div class="kpis" id="mem-kpis"></div>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-programs"></table></div>
+  <button class="addrow op-only" data-add="programs">+ Add program</button>
+  <p class="note">Revenue per member is annualized and recognized ratably from program start through December. Programs whose file has not been received use expected members &times; the active member-variance scenario and are flagged <span class="pill sub">Subject to member reconciliation</span>.</p>
+</section>
+
+<!-- 07 MEMBER UNCERTAINTY -->
+<section class="sec board-hide" id="s-memvar">
+  <div class="sec-h"><span class="no">07</span><h2>Member Count Uncertainty</h2><span class="meta">Applies to unconfirmed programs</span></div>
+  <div class="fields op-only" id="f-memvar"></div>
+  <div class="chipset" id="memvar-chips"></div>
+  <div class="kpis" id="memvar-kpis"></div>
+  <p class="note">The active variance flows into pending revenue, the projection, confidence-weighted revenue, the quarterly profile and the gap to target. Programs with a received or reconciled file are unaffected.</p>
+</section>
+
+<!-- 08 LIFECYCLE -->
+<section class="sec board-hide" id="s-lifecycle">
+  <div class="sec-h"><span class="no">08</span><h2>Revenue State Lifecycle</h2><span class="meta">Why contracted revenue moved</span></div>
+  <div class="chipset" id="lc-chips"></div>
+  <div class="lifecycle" id="lifecycle"></div>
+  <div class="kpis" id="lc-kpis"></div>
+</section>
+
+<!-- 09 CUSTOMER OPS -->
+<section class="sec board-hide" id="s-custops">
+  <div class="sec-h"><span class="no">09</span><h2>Customer Operations Dependency</h2><span class="meta">Revenue truth is cross-functional</span></div>
+  <p class="lede">The final economic value of a contract could not always be determined from CRM opportunity data alone. Revenue Operations
+  had to connect commercial data with post-sale operational data to maintain an accurate view of future and realized revenue.</p>
+  <div class="arch">
+    <div class="ab blue"><h4>Sales</h4><ul><li>Commercial terms</li><li>Contract executed</li><li>Expected program scope</li></ul></div>
+    <div class="ab amber"><h4>Customer Operations</h4><ul><li>Program launch</li><li>Member eligibility file</li><li>Actual population</li><li>Execution status</li></ul></div>
+    <div class="ab teal"><h4>Revenue Operations</h4><ul><li>Pending revenue</li><li>Revenue reconciliation</li><li>CRM representation</li><li>Forecast implications</li></ul></div>
+    <div class="ab"><h4>Finance</h4><ul><li>Revenue recognition</li><li>Financial reconciliation</li><li>System of record</li></ul></div>
+  </div>
+  <div class="flowline">Sales &rarr; Customer Operations &rarr; Revenue Operations &harr; Finance &rarr; integrated annual revenue model</div>
+</section>
+
+<!-- 10/11 FUNNELS -->
+<section class="sec board-hide" id="s-funnels">
+  <div class="sec-h"><span class="no">10</span><h2>Acquisition Funnel Model</h2><span class="meta">Marketing-sourced baseline demand</span><button class="rst" data-reset="funnels">Reset section</button></div>
+  <p class="note">These funnels represent baseline marketing-sourced demand. Trade shows, webinars and outbound are modeled separately as incremental motions so they are not counted twice. Opportunities are created evenly through the year; a deal only counts in 2026 if it goes live (cycle + implementation) by December, and then only for its remaining months.</p>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-funnels"></table></div>
+  <button class="addrow op-only" data-add="funnels">+ Add funnel / segment</button>
+  <div class="sec-h" style="margin-top:22px"><span class="no">11</span><h2>Required Funnel &mdash; Working Backward</h2><span class="meta">Reverse calculation</span></div>
+  <p class="note">Enter the revenue required from each motion. The model calculates required wins, opportunities, SQLs, MQLs and leads at the current conversion assumptions, rounding upward because partial opportunities do not exist.</p>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-required"></table></div>
+</section>
+
+<!-- 12 FQHC -->
+<section class="sec board-hide" id="s-fqhc">
+  <div class="sec-h"><span class="no">12</span><h2>FQHC Market Expansion</h2><span class="meta">New market penetration</span><button class="rst" data-reset="fqhc">Reset section</button></div>
+  <div class="fields" id="f-fqhc"></div>
+  <div class="kpis" id="fqhc-kpis"></div>
+</section>
+
+<!-- 13/14/15 MARKETING -->
+<section class="sec board-hide" id="s-marketing">
+  <div class="sec-h"><span class="no">13</span><h2>Trade Show Model</h2><span class="meta">Incremental event activity</span><button class="rst" data-reset="tradeshow">Reset section</button></div>
+  <div class="fields" id="f-tradeshow"></div>
+  <div class="kpis" id="ts-kpis"></div>
+  <div class="sec-h" style="margin-top:22px"><span class="no">14</span><h2>Webinar Model</h2><span class="meta">Incremental webinar program</span><button class="rst" data-reset="webinar">Reset section</button></div>
+  <div class="fields" id="f-webinar"></div>
+  <div class="kpis" id="wb-kpis"></div>
+  <div class="sec-h" style="margin-top:22px"><span class="no">15</span><h2>Marketing Channel Comparison</h2><span class="meta">Spend &middot; pipeline &middot; revenue</span></div>
+  <p class="note">The expected-revenue-to-spend ratio is not labeled ROI: the model does not include contribution-margin economics.</p>
+  <div class="tblwrap"><table class="tbl" id="t-channels"></table></div>
+</section>
+
+<!-- 16/17 PRODUCT -->
+<section class="sec board-hide" id="s-product">
+  <div class="sec-h"><span class="no">16</span><h2>New Program Revenue</h2><span class="meta">Adoption &times; members &times; revenue per member</span><button class="rst" data-reset="newPrograms">Reset section</button></div>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-newprograms"></table></div>
+  <button class="addrow op-only" data-add="newPrograms">+ Add program</button>
+  <div class="sec-h" style="margin-top:22px"><span class="no">17</span><h2>New Platform Capability Model</h2><span class="meta">Installed base &middot; new logo</span><button class="rst" data-reset="platform">Reset section</button></div>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-platform"></table></div>
+  <button class="addrow op-only" data-add="platform">+ Add capability</button>
+</section>
+
+<!-- 18 AE CAPACITY -->
+<section class="sec board-hide" id="s-capacity">
+  <div class="sec-h"><span class="no">18</span><h2>Outbound AE Capacity Model</h2><span class="meta">Headcount &ne; productive capacity</span><button class="rst" data-reset="ae">Reset section</button></div>
+  <div class="fields" id="f-ae"></div>
+  <div class="fields op-only" id="f-ramp"></div>
+  <div class="kpis" id="ae-kpis"></div>
+  <div class="chart"><h4>Nominal headcount vs. effective productive capacity by month</h4><div id="ch-ae"></div></div>
+</section>
+
+<!-- 19/20 EXPANSION -->
+<section class="sec board-hide" id="s-expansion">
+  <div class="sec-h"><span class="no">19</span><h2>Strategic Account Manager Expansion</h2><span class="meta">Land and expand</span><button class="rst" data-reset="sam">Reset section</button></div>
+  <div class="fields" id="f-sam"></div>
+  <div class="kpis" id="sam-kpis"></div>
+  <div class="sec-h" style="margin-top:22px"><span class="no">20</span><h2>Installed-Base Expansion</h2><span class="meta">Direct expansion motion</span><button class="rst" data-reset="installed">Reset section</button></div>
+  <p class="note">When both models are enabled, accounts already covered by Strategic Account Managers are removed from the installed-base pool so expansion is never counted twice.</p>
+  <div class="fields" id="f-installed"></div>
+  <div class="kpis" id="inst-kpis"></div>
+</section>
+
+<!-- 21/22 CONFIDENCE -->
+<section class="sec board-hide" id="s-confidence">
+  <div class="sec-h"><span class="no">21</span><h2>Confidence Model</h2><span class="meta">Not all growth is equally certain</span><button class="rst" data-reset="conf">Reset section</button></div>
+  <div class="fields op-only" id="f-conf"></div>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-conf"></table></div>
+  <div class="sec-h" style="margin-top:22px"><span class="no">22</span><h2>Three Types of Uncertainty</h2><span class="meta">Where the model applies them</span></div>
+  <div class="three">
+    <div class="u"><h3>Commercial uncertainty</h3><p>Will the organization win the business?</p><ul><li>Pipeline conversion</li><li>Win rate</li><li>Deal size</li></ul></div>
+    <div class="u"><h3>Execution uncertainty</h3><p>Will the business execute the initiative on schedule?</p><ul><li>Hiring and ramp</li><li>Product and program launch</li><li>Customer implementation</li></ul></div>
+    <div class="u"><h3>Economic uncertainty</h3><p>Once executed, what will the final value actually be?</p><ul><li>Actual member population</li><li>Revenue per member</li><li>Adoption and expansion value</li></ul></div>
+  </div>
+</section>
+
+<!-- 23/24 SCENARIOS -->
+<section class="sec" id="s-scenarios">
+  <div class="sec-h"><span class="no">23</span><h2>Scenario Planning</h2><span class="meta">Presets adjust assumptions, not totals</span></div>
+  <div class="cols2">
+    <div class="box"><h3>Active scenario: <span id="scen-name">Base</span></h3>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Conservative and Upside change specific operating assumptions &mdash; win rates, MQL volume, conversion, member variance, hiring timing, productivity, launch timing, adoption, execution probability, cycle and confidence. Editing any value switches you to Custom.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="tbtn" id="btn-reset-scen">Reset scenario to preset</button><button class="tbtn" id="btn-clear-saved">Clear saved custom</button></div>
+    </div>
+    <div class="box"><h3>Assumptions changed vs. Base</h3><div class="diff" id="scen-diff">—</div></div>
+  </div>
+  <div class="sec-h" style="margin-top:22px"><span class="no">24</span><h2>Scenario Comparison</h2><span class="meta">Side by side</span></div>
+  <div class="tblwrap"><table class="tbl" id="t-compare"></table></div>
+</section>
+
+<!-- 25 SENSITIVITY -->
+<section class="sec" id="s-sensitivity">
+  <div class="sec-h"><span class="no">25</span><h2>What Moves the Number?</h2><span class="meta">Sensitivity, ranked</span></div>
+  <p class="note">Each row re-runs the full model with one assumption changed from its current value and reports the change in projected 2026 revenue. Effects are approximate, single-variable and state-dependent; they are not causal claims.</p>
+  <div class="box" id="sens"></div>
+</section>
+
+<!-- 26 GAP CLOSURE -->
+<section class="sec" id="s-gap">
+  <div class="sec-h"><span class="no">26</span><h2>What Has To Be True?</h2><span class="meta">Gap closure at current assumptions</span></div>
+  <div class="kpis" id="gap-kpis"></div>
+  <div id="gap-items"></div>
+</section>
+
+<!-- 28/29 TIME -->
+<section class="sec" id="s-time">
+  <div class="sec-h"><span class="no">28</span><h2>Time-Phased Model</h2><span class="meta">When the revenue lands</span></div>
+  <div class="chipset" id="period-chips"></div>
+  <div class="chart"><h4>Projected revenue by period, with confidence-weighted overlay</h4><div id="ch-period"></div></div>
+  <div class="chart"><h4>Cumulative projected vs. cumulative target</h4><div id="ch-cum"></div></div>
+  <div class="sec-h" style="margin-top:22px"><span class="no">29</span><h2>Plan Timing Risk</h2><span class="meta">Not whether &mdash; when</span></div>
+  <p class="note">Toggle a delay to apply it to the live model. The list shows the annual revenue effect of each delay on its own from the current state.</p>
+  <div class="togglerow op-only" id="timing-toggles"></div>
+  <div class="box" id="timing-list"></div>
+</section>
+
+<!-- 30 COMPOSITION -->
+<section class="sec" id="s-composition">
+  <div class="sec-h"><span class="no">30</span><h2>Revenue Composition</h2><span class="meta">Projected 2026</span></div>
+  <div class="cols2">
+    <div class="chart"><h4>By revenue state</h4><div id="ch-state"></div></div>
+    <div class="chart"><h4>By growth motion</h4><div id="ch-motion"></div></div>
+    <div class="chart"><h4>By confidence category</h4><div id="ch-conf"></div></div>
+    <div class="chart"><h4>Existing vs. new</h4><div id="ch-exnew"></div></div>
+  </div>
+</section>
+
+<!-- 32 LEVERS -->
+<section class="sec op-only" id="s-levers">
+  <div class="sec-h"><span class="no">32</span><h2>User-Defined Growth Levers</h2><span class="meta">Strategic initiatives not in the original reconstruction</span><button class="rst" data-reset="levers">Reset section</button></div>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-levers"></table></div>
+  <button class="addrow" data-add="levers">+ Add lever</button>
+</section>
+
+<!-- 33 RISKS -->
+<section class="sec" id="s-risks">
+  <div class="sec-h"><span class="no">33</span><h2>Executive Risks</h2><span class="meta">Rule-based, from model state</span></div>
+  <div id="risks"></div>
+</section>
+
+<!-- 31 REGISTER -->
+<section class="sec op-only" id="s-register">
+  <div class="sec-h"><span class="no">31</span><h2>Assumption Register</h2><span class="meta">Central audit trail</span></div>
+  <div class="reg-filter"><input type="search" id="reg-q" placeholder="Filter assumptions&hellip;"><select id="reg-src"><option value="">All source types</option><option>Known historical value</option><option>Current operating assumption</option><option>Planning assumption</option><option>Illustrative portfolio assumption</option></select></div>
+  <div class="tblwrap board-hide"><table class="tbl" id="t-register"></table></div>
+</section>
+
+<!-- 36 ARCHITECTURE -->
+<section class="sec board-hide" id="s-arch">
+  <div class="sec-h"><span class="no">36</span><h2>Original Model Architecture</h2><span class="meta">2025 operating ecosystem</span></div>
+  <div class="arch">
+    <div class="ab"><h4>Finance</h4><ul><li>Recognized revenue</li><li>Financial reconciliation</li><li>System of record</li></ul></div>
+    <div class="ab amber"><h4>Customer Operations</h4><ul><li>Program launch</li><li>Member file</li><li>Actual member population</li><li>Execution status</li></ul></div>
+    <div class="ab blue"><h4>HubSpot</h4><ul><li>Customer &middot; Contract &middot; Program</li><li>Pipeline</li><li>Revenue-state custom objects</li><li>Operating revenue model &amp; commercial data layer</li></ul></div>
+    <div class="ab teal"><h4>Revenue Operations</h4><ul><li>Revenue state management</li><li>Reconciliation (first week, monthly)</li><li>Forecasting</li><li>Scenario modeling (Excel)</li></ul></div>
+  </div>
+  <div class="flowline">&harr; Sales (pipeline, capacity, conversion, new logo) &harr; Marketing (demand generation, attribution, events, webinars) &harr; Product (programs, platform capabilities, launch timing) &harr;</div>
+  <div class="arch" style="grid-template-columns:repeat(4,1fr)">
+    <div class="ab"><h4>&darr; Integrated revenue model</h4><ul><li>Recognized + contracted + pending + pipeline in one governed view</li></ul></div>
+    <div class="ab"><h4>&darr; Annual plan</h4><ul><li>Target tested against operating mechanics</li></ul></div>
+    <div class="ab"><h4>&darr; Executive / Board expectation</h4><ul><li>Efficacy and credibility evaluated before commitment</li></ul></div>
+    <div class="ab"><h4>&darr; Monthly forecast &amp; cadence</h4><ul><li>Same model monitored through the year</li></ul></div>
+  </div>
+  <p class="note">Finance remained the financial system of record. HubSpot was the operating revenue model and commercial data layer &mdash; it did not replace the accounting ledger. Recognized revenue was reconciled with Finance during the first week of each month and written back into the HubSpot revenue objects.</p>
+</section>
+
+<!-- 37 BEFORE / AFTER -->
+<section class="sec" id="s-ba">
+  <div class="sec-h"><span class="no">37</span><h2>Before and After</h2><span class="meta">What changed in how planning worked</span></div>
+  <div class="ba">
+    <div class="b"><h3>Before</h3>
+      <p>Annual expectations were heavily informed by prior-year performance and separate functional assumptions.</p>
+      <p>Revenue states were difficult to evaluate together, and contracted revenue could change based on customer execution and member population.</p>
+      <p>Commercial, operational, product and marketing assumptions were not represented in one integrated planning environment.</p></div>
+    <div class="b"><h3>After</h3>
+      <p>Leadership could evaluate the forward plan using a single connected model:</p>
+      <ul><li>Existing revenue</li><li>Pending revenue</li><li>Member-based economics</li><li>Pipeline</li><li>Funnel conversion</li><li>Market expansion</li><li>Marketing contribution</li><li>Seller capacity</li><li>Expansion</li><li>Product / program launches</li><li>Timing</li><li>Confidence</li><li>Scenario analysis</li></ul></div>
+  </div>
+  <div class="callout" style="margin-top:18px">Annual planning is not a spreadsheet exercise. It is the operating architecture that connects Finance, Sales,
+  Marketing, Product, Customer Operations, customer economics, pipeline, capacity, execution timing and uncertainty into one
+  revenue model that leadership can reason about &mdash; and then monitor against, month by month.</div>
+</section>
+
+</main>
+<div class="modal" id="guide-modal" hidden role="dialog" aria-modal="true" aria-labelledby="gm-title">
+  <div class="modal-box" id="gm-box">
+    <button class="x" id="gm-close" aria-label="Close">&times;</button>
+    <div class="mk" id="gm-k">Guide</div>
+    <h3 id="gm-title">—</h3>
+    <div id="gm-body"></div>
+    <div class="mnav"><button class="tbtn" id="gm-prev">&larr; Previous</button><button class="tbtn" id="gm-index">All sections</button><button class="tbtn" id="gm-next">Next &rarr;</button></div>
+  </div>
+</div>
+<footer class="foot"><div class="wrap">Jason Dommel &middot; Revenue Operations &middot; Interactive reconstruction of a 2025 revenue planning model for a healthcare SaaS client (RevIntel engagement). Known values: 2025 projected $10.6M, 2026 target $20.0M, payer deal ~$300K, provider deal ~$125K, member files typically received ~2 weeks after program start. All other values are planning or illustrative portfolio assumptions.</div></footer>
+<script>
+/* ===================== MODEL: DEFAULTS + CALCULATION LAYER ===================== */
+/* Pure functions. compute(state) -> results. No DOM access in this file. */
+
+var KNOWN = { baseline2025: 10600000, target2026: 20000000, payerDeal: 300000, providerDeal: 125000, fileWeeks: 2 };
+
+var DEFAULTS = {
+  target: 20000000,
+  baseline: 10600000,
+  scenario: 'base',
+  view: 'operator',
+  period: 'quarterly',
+  memberVar: { down: -10, base: 0, up: 10, active: 'base' },
+  timing: { aeDelay: 0, cycleDelay: 0, implDelay: 0, productDelayQ: 0, fileDelay: 0, programDelay: 0 },
+  conf: { recognized: 95, contracted: 85, member: 75, pipeline: 65, funnels: 60, fqhc: 50, tradeshow: 50, webinar: 50,
+          programs: 50, platform: 50, aeHiring: 55, aeProd: 65, sam: 55, installed: 65, levers: 40 },
+  weights: { coverage: 50, certainty: 30, timing: 20 },
+  segments: [
+    { id: 's1', name: 'Payers / Health Plans', recognized: 5200000, contracted: 1800000, contractedInYear: 75, opps: 9, deal: 300000, win: 30, cycle: 6, closeQ: 2, impl: 2, inYear: 100, conf: 70, expansion: 15 },
+    { id: 's2', name: 'Providers / Health Systems', recognized: 3400000, contracted: 800000, contractedInYear: 75, opps: 18, deal: 125000, win: 32, cycle: 4, closeQ: 2, impl: 1, inYear: 100, conf: 70, expansion: 12 },
+    { id: 's3', name: 'Strategic / Indirect', recognized: 1500000, contracted: 300000, contractedInYear: 70, opps: 4, deal: 200000, win: 25, cycle: 8, closeQ: 3, impl: 2, inYear: 100, conf: 60, expansion: 10 },
+    { id: 's4', name: 'FQHCs', recognized: 300000, contracted: 100000, contractedInYear: 75, opps: 6, deal: 60000, win: 28, cycle: 3, closeQ: 2, impl: 1, inYear: 100, conf: 60, expansion: 8 }
+  ],
+  programs: [
+    { id: 'p1', name: 'Program 1', customer: 'Customer A', segment: 's1', status: 'Contracted', startMo: 2, expMembers: 40000, rpm: 12, fileMo: 2, fileStatus: 'Reconciled', actualMembers: 34000, execProb: 100, inYear: 100, conf: 90 },
+    { id: 'p2', name: 'Program 2', customer: 'Customer B', segment: 's1', status: 'Contracted', startMo: 4, expMembers: 25000, rpm: 14, fileMo: 4, fileStatus: 'Received', actualMembers: 27500, execProb: 100, inYear: 100, conf: 85 },
+    { id: 'p3', name: 'Program 3', customer: 'Customer C', segment: 's2', status: 'Contracted', startMo: 6, expMembers: 15000, rpm: 10, fileMo: 6, fileStatus: 'Not Received', actualMembers: 0, execProb: 85, inYear: 100, conf: 70 },
+    { id: 'p4', name: 'Program 4', customer: 'Customer D', segment: 's1', status: 'Contracted', startMo: 9, expMembers: 60000, rpm: 12, fileMo: 9, fileStatus: 'Not Received', actualMembers: 0, execProb: 70, inYear: 100, conf: 60 }
+  ],
+  funnels: [
+    { id: 'f1', name: 'Payer', segment: 's1', mode: 'mql', leads: 800, l2m: 25, mqls: 240, m2s: 35, s2o: 45, o2w: 28, deal: 300000, cycle: 6, impl: 2, inYear: 100, conf: 60, required: 2000000 },
+    { id: 'f2', name: 'Provider', segment: 's2', mode: 'mql', leads: 1700, l2m: 30, mqls: 700, m2s: 35, s2o: 45, o2w: 30, deal: 125000, cycle: 4, impl: 1, inYear: 100, conf: 60, required: 1000000 },
+    { id: 'f3', name: 'FQHC (inbound)', segment: 's4', mode: 'mql', leads: 300, l2m: 20, mqls: 60, m2s: 30, s2o: 40, o2w: 25, deal: 60000, cycle: 3, impl: 1, inYear: 100, conf: 55, required: 250000 }
+  ],
+  fqhc: { tam: 1400, serviceable: 900, targeted: 300, reach: 60, engage: 35, mql: 50, sql: 50, opp: 45, win: 28, deal: 60000, cycle: 3, impl: 1, inYear: 100, conf: 50 },
+  tradeshow: { shows: 6, cost: 35000, leads: 45, l2m: 40, m2s: 35, s2o: 45, win: 25, deal: 200000, cycle: 6, impl: 1, inYear: 100, conf: 50 },
+  webinar: { count: 10, reg: 120, attend: 45, mql: 25, m2s: 30, s2o: 40, win: 25, deal: 150000, cycle: 5, impl: 1, inYear: 100, cost: 4000, conf: 50 },
+  newPrograms: [
+    { id: 'n1', name: 'Program A', launchQ: 2, segment: 's1', addressable: 20, adoption: 25, members: 15000, rpm: 10, execProb: 80, adoptConf: 70, impl: 2, inYear: 100, conf: 50 },
+    { id: 'n2', name: 'Program B', launchQ: 3, segment: 's2', addressable: 60, adoption: 15, members: 3000, rpm: 12, execProb: 75, adoptConf: 65, impl: 1, inYear: 100, conf: 45 }
+  ],
+  platform: [
+    { id: 'c1', name: 'Capability A', launchQ: 2, base: 80, newLogo: 30, adoption: 25, attach: 60, avgRev: 40000, cycle: 2, impl: 1, inYear: 100, conf: 50 }
+  ],
+  ae: { existing: 4, existingProd: 1.0, hires: 3, hireMo: 3, ramp: [0, 25, 50, 75, 100], oppsPer: 1.0, win: 25, deal: 175000, cycle: 5, impl: 2, attrition: 10, variability: 0, inYear: 100, conf: 55 },
+  sam: { enabled: true, count: 2, startMo: 2, rampMo: 3, accountsPer: 25, eligible: 70, oppRate: 40, oppValue: 75000, win: 45, cycle: 4, impl: 1, inYear: 100, conf: 55 },
+  installed: { enabled: true, customers: 120, eligiblePct: 50, oppPct: 25, avgValue: 60000, win: 40, closeMo: 4, inYear: 100, conf: 65 },
+  levers: [
+    { id: 'l1', name: 'Partner referral channel', cat: 'New channel', rev: 250000, timingQ: 3, conf: 40, down: 100000, base: 250000, up: 400000, notes: 'Illustrative user-defined lever', enabled: true }
+  ],
+  toggles: { recognized: true, contracted: true, member: true, pipeline: true, funnels: true, fqhc: true, tradeshow: true, webinar: true, programs: true, platform: true, ae: true, sam: true, installed: true, levers: true }
+};
+
+/* ---------- helpers ---------- */
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function clamp(v, lo, hi){ v = Number(v); if (isNaN(v)) v = lo; return Math.min(hi, Math.max(lo, v)); }
+function pct(v){ return clamp(v, 0, 100) / 100; }
+function zeros(){ return [0,0,0,0,0,0,0,0,0,0,0,0]; }
+function sum(a){ var t = 0; for (var i = 0; i < a.length; i++) t += (a[i] || 0); return t; }
+function addTo(a, b){ for (var i = 0; i < 12; i++) a[i] += (b[i] || 0); return a; }
+function scale(a, k){ return a.map(function(x){ return x * k; }); }
+function qOf(m){ return Math.floor(m / 3); }
+/* Ratable recognition: `annual` value recognized 1/12 per month from `start` (0-11) through December.
+   Go-live after December -> nothing lands in-year. In-year total = annual x remaining months / 12. */
+function phase(annual, start){
+  var a = zeros(); start = Math.round(start);
+  if (start > 11 || annual <= 0) return a;
+  if (start < 0) start = 0;
+  for (var m = start; m < 12; m++) a[m] = annual / 12;
+  return a;
+}
+function remaining(start){ start = Math.round(start); return start > 11 ? 0 : (12 - Math.max(0,start)) / 12; }
+function certCat(c){ return c >= 85 ? 'More Certain' : c >= 65 ? 'Moderately Certain' : c >= 45 ? 'Execution Dependent' : 'Highly Assumption Dependent'; }
+
+/* ---------- source builder ---------- */
+function src(key, label, gross, monthly, conf, meta){
+  var w = pct(conf);
+  return { key: key, label: label, gross: gross, weighted: gross * w, conf: conf, cert: certCat(conf),
+           monthly: monthly, wMonthly: scale(monthly, w), meta: meta || {} };
+}
+
+/* ---------- calculators ---------- */
+function calcSegments(S, T){
+  var out = { recognized: [], contracted: [], pipeline: [], bySeg: {} };
+  S.segments.forEach(function(g){
+    var rec = Math.max(0, g.recognized);
+    var recM = scale([1,1,1,1,1,1,1,1,1,1,1,1], rec / 12);
+    var con = Math.max(0, g.contracted) * pct(g.contractedInYear);   /* explicit in-year realization: no launch date at segment level */
+    var conM = scale([1,1,1,1,1,1,1,1,1,1,1,1], con / 12);
+    var closeM = (clamp(g.closeQ,1,4) - 1) * 3 + 1;                 /* mid-quarter close month (0-11) */
+    var goLive = closeM + clamp(g.impl,0,24) + T.implDelay;
+    var wins = Math.max(0, g.opps) * pct(g.win);
+    var annual = wins * Math.max(0, g.deal) * pct(g.inYear);
+    var pipeM = phase(annual, goLive), pipe = sum(pipeM);
+    out.recognized.push({ seg: g.id, v: rec, m: recM });
+    out.contracted.push({ seg: g.id, v: con, m: conM });
+    out.pipeline.push({ seg: g.id, v: pipe, m: pipeM, wins: wins, gross: Math.max(0,g.opps)*Math.max(0,g.deal), weighted: wins*Math.max(0,g.deal), goLive: goLive, conf: g.conf });
+    out.bySeg[g.id] = { recognized: rec, contracted: con, pipeline: pipe, name: g.name };
+  });
+  return out;
+}
+
+function calcMemberPrograms(S, T){
+  var v = S.memberVar, factor = 1 + (v.active === 'down' ? v.down : v.active === 'up' ? v.up : v.base) / 100;
+  var rows = [], total = 0, monthly = zeros(), totalW = 0, subject = 0;
+  S.programs.forEach(function(p){
+    var exp = Math.max(0, p.expMembers), act = Math.max(0, p.actualMembers), rpm = Math.max(0, p.rpm);
+    var hasFile = p.fileStatus !== 'Not Received';
+    var planMembers = hasFile ? act : exp * factor;
+    var expectedRev = exp * rpm, reconciledRev = hasFile ? act * rpm : null;
+    var planRev = planMembers * rpm;
+    var start = clamp(p.startMo,1,12) - 1 + T.programDelay + (hasFile ? 0 : T.fileDelay);
+    var m = phase(planRev * pct(p.execProb) * pct(p.inYear), start), inYear = sum(m);
+    var row = { id: p.id, expectedRev: expectedRev, reconciledRev: reconciledRev, planRev: planRev, inYear: inYear,
+      memberVar: hasFile ? act - exp : null, memberVarPct: hasFile && exp > 0 ? act / exp - 1 : null,
+      trueUp: hasFile ? reconciledRev - expectedRev : null, subject: !hasFile, start: start, remaining: 12 - Math.min(12, Math.max(0, start)), conf: p.conf,
+      weighted: inYear * pct(p.conf), hasFile: hasFile, planMembers: planMembers };
+    rows.push(row); total += inYear; totalW += row.weighted; addTo(monthly, m); if (!hasFile) subject += inYear;
+  });
+  return { rows: rows, total: total, weighted: totalW, monthly: monthly, subject: subject, factor: factor };
+}
+
+function funnelCore(mqls, m2s, s2o, o2w, deal, cycle, impl, inYear, T){
+  var sql = mqls * pct(m2s), opps = sql * pct(s2o), wins = opps * pct(o2w);
+  var gross = opps * deal, weighted = wins * deal;
+  var lag = clamp(cycle,0,36) + T.cycleDelay + clamp(impl,0,24) + T.implDelay;
+  /* opportunities are created evenly through the year; only those going live by Dec count */
+  var monthly = zeros();
+  for (var m = 0; m < 12; m++){
+    var g = m + lag; if (g > 11) continue;
+    addTo(monthly, phase((wins / 12) * deal * pct(inYear), g));
+  }
+  var inYr = sum(monthly), realized = weighted > 0 ? inYr / (weighted * pct(inYear)) : 0;
+  return { sql: sql, opps: opps, wins: wins, gross: gross, weighted: weighted, inYear: inYr, monthly: monthly, lag: lag, mqls: mqls, realizedShare: realized };
+}
+
+function calcFunnels(S, T){
+  var rows = [], total = 0, totalW = 0, monthly = zeros(), gross = 0, weightedPipe = 0, wins = 0, mq = 0;
+  S.funnels.forEach(function(f){
+    var mqls = f.mode === 'leads' ? Math.max(0,f.leads) * pct(f.l2m) : Math.max(0, f.mqls);
+    var c = funnelCore(mqls, f.m2s, f.s2o, f.o2w, Math.max(0,f.deal), f.cycle, f.impl, f.inYear, T);
+    c.id = f.id; c.conf = f.conf; c.weightedRev = c.inYear * pct(f.conf);
+    /* required funnel (reverse) */
+    var perWin = Math.max(0,f.deal) * pct(f.inYear), req = Math.max(0, f.required);
+    c.req = perWin > 0 && pct(f.o2w) > 0 && pct(f.s2o) > 0 && pct(f.m2s) > 0 ? {
+      wins: Math.ceil(req / perWin), opps: Math.ceil(Math.ceil(req/perWin) / pct(f.o2w)),
+      sqls: Math.ceil(Math.ceil(Math.ceil(req/perWin)/pct(f.o2w)) / pct(f.s2o)),
+      mqls: Math.ceil(Math.ceil(Math.ceil(Math.ceil(req/perWin)/pct(f.o2w))/pct(f.s2o)) / pct(f.m2s)),
+      leads: pct(f.l2m) > 0 ? Math.ceil(Math.ceil(Math.ceil(Math.ceil(Math.ceil(req/perWin)/pct(f.o2w))/pct(f.s2o))/pct(f.m2s)) / pct(f.l2m)) : null
+    } : null;
+    rows.push(c); total += c.inYear; totalW += c.weightedRev; addTo(monthly, c.monthly);
+    gross += c.gross; weightedPipe += c.weighted; wins += c.wins; mq += mqls;
+  });
+  return { rows: rows, total: total, weighted: totalW, monthly: monthly, gross: gross, weightedPipe: weightedPipe, wins: wins, mqls: mq };
+}
+
+function calcFQHC(S, T){
+  var f = S.fqhc, targeted = Math.min(Math.max(0,f.targeted), Math.max(0,f.serviceable), Math.max(0,f.tam));
+  var reached = targeted * pct(f.reach), engaged = reached * pct(f.engage), mqls = engaged * pct(f.mql);
+  var c = funnelCore(mqls, f.sql, f.opp, f.win, Math.max(0,f.deal), f.cycle, f.impl, f.inYear, T);
+  c.targeted = targeted; c.reached = reached; c.engaged = engaged; c.mqls = mqls;
+  return c;
+}
+
+function calcTradeshow(S, T){
+  var t = S.tradeshow, leads = Math.max(0,t.shows) * Math.max(0,t.leads), mqls = leads * pct(t.l2m);
+  var c = funnelCore(mqls, t.m2s, t.s2o, t.win, Math.max(0,t.deal), t.cycle, t.impl, t.inYear, T);
+  c.leads = leads; c.spend = Math.max(0,t.shows) * Math.max(0,t.cost);
+  c.costPerOpp = c.opps > 0 ? c.spend / c.opps : null;
+  c.revPerEvent = t.shows > 0 ? c.inYear / t.shows : 0; c.pipePerEvent = t.shows > 0 ? c.gross / t.shows : 0;
+  c.revPerDollar = c.spend > 0 ? c.inYear / c.spend : null; c.pipePerDollar = c.spend > 0 ? c.gross / c.spend : null;
+  return c;
+}
+
+function calcWebinar(S, T){
+  var w = S.webinar, reg = Math.max(0,w.count) * Math.max(0,w.reg), att = reg * pct(w.attend), mqls = att * pct(w.mql);
+  var c = funnelCore(mqls, w.m2s, w.s2o, w.win, Math.max(0,w.deal), w.cycle, w.impl, w.inYear, T);
+  c.reg = reg; c.att = att; c.spend = Math.max(0,w.count) * Math.max(0,w.cost);
+  c.costPerOpp = c.opps > 0 ? c.spend / c.opps : null;
+  c.revPerDollar = c.spend > 0 ? c.inYear / c.spend : null; c.pipePerDollar = c.spend > 0 ? c.gross / c.spend : null;
+  return c;
+}
+
+function calcNewPrograms(S, T){
+  var rows = [], total = 0, totalW = 0, monthly = zeros();
+  S.newPrograms.forEach(function(n){
+    var customers = Math.max(0,n.addressable) * pct(n.adoption);
+    var members = customers * Math.max(0,n.members);
+    var grossOpp = Math.max(0,n.addressable) * Math.max(0,n.members) * Math.max(0,n.rpm);
+    var bookings = members * Math.max(0,n.rpm);
+    var launch = (clamp(n.launchQ,1,4) - 1) * 3 + (T.productDelayQ * 3);
+    var goLive = launch + clamp(n.impl,0,24) + T.implDelay;
+    var mm = phase(bookings * pct(n.execProb) * pct(n.adoptConf) * pct(n.inYear), goLive), rev = sum(mm);
+    var r = { id: n.id, customers: customers, members: members, grossOpp: grossOpp, bookings: bookings, rev: rev, weighted: rev * pct(n.conf), goLive: goLive, conf: n.conf };
+    rows.push(r); total += rev; totalW += r.weighted; addTo(monthly, mm);
+  });
+  return { rows: rows, total: total, weighted: totalW, monthly: monthly };
+}
+
+function calcPlatform(S, T){
+  var rows = [], total = 0, totalW = 0, monthly = zeros();
+  S.platform.forEach(function(c){
+    var baseAcc = Math.max(0,c.base) * pct(c.adoption) * pct(c.attach), newAcc = Math.max(0,c.newLogo) * pct(c.adoption);
+    var bookings = (baseAcc + newAcc) * Math.max(0,c.avgRev);
+    var launch = (clamp(c.launchQ,1,4) - 1) * 3 + (T.productDelayQ * 3);
+    var goLive = launch + clamp(c.cycle,0,24) + T.cycleDelay + clamp(c.impl,0,24) + T.implDelay;
+    var mm = phase(bookings * pct(c.inYear), goLive), rev = sum(mm);
+    var r = { id: c.id, accounts: baseAcc + newAcc, bookings: bookings, rev: rev, weighted: rev * pct(c.conf), goLive: goLive, conf: c.conf };
+    rows.push(r); total += rev; totalW += r.weighted; addTo(monthly, mm);
+  });
+  return { rows: rows, total: total, weighted: totalW, monthly: monthly };
+}
+
+function calcAE(S, T){
+  var a = S.ae, ramp = (a.ramp || [0,25,50,75,100]).map(function(x){ return pct(x); });
+  var hireMo = clamp(a.hireMo,1,12) - 1 + T.aeDelay;
+  var lag = clamp(a.cycle,0,36) + T.cycleDelay + clamp(a.impl,0,24) + T.implDelay;
+  var attr = pct(a.attrition), varf = 1 + clamp(a.variability,-50,50)/100;
+  var headcount = zeros(), effective = zeros(), opps = zeros(), monthly = zeros();
+  var totalOpps = 0, inYr = 0, headMonths = 0, effMonths = 0;
+  for (var m = 0; m < 12; m++){
+    /* existing AEs: full productivity, attrition applied pro rata across the year */
+    var ex = Math.max(0,a.existing) * (1 - attr * (m + 1) / 12);
+    var exOpps = ex * Math.max(0,a.existingProd) * varf;
+    /* new hires */
+    var nh = 0, nhEff = 0;
+    if (m >= hireMo){ var k = m - hireMo; var r = k < ramp.length ? ramp[k] : ramp[ramp.length-1]; nh = Math.max(0,a.hires); nhEff = nh * r; }
+    var nhOpps = nhEff * Math.max(0,a.oppsPer) * varf;
+    headcount[m] = ex + nh; effective[m] = ex + nhEff; opps[m] = exOpps + nhOpps;
+    headMonths += headcount[m]; effMonths += effective[m]; totalOpps += opps[m];
+    var g = m + lag; if (g <= 11){ addTo(monthly, phase(opps[m] * pct(a.win) * Math.max(0,a.deal) * pct(a.inYear), g)); }
+  }
+  inYr = sum(monthly);
+  var wins = totalOpps * pct(a.win);
+  var perFullAE = 0; for (var mm2 = 0; mm2 < 12; mm2++){ if (mm2 + lag <= 11) perFullAE += Math.max(0,a.oppsPer) * pct(a.win) * Math.max(0,a.deal) * pct(a.inYear) * (12 - (mm2 + lag)) / 12; }
+  return { headcount: headcount, effective: effective, opps: opps, totalOpps: totalOpps, wins: wins, gross: totalOpps*Math.max(0,a.deal),
+           bookings: wins * Math.max(0,a.deal), inYear: inYr, monthly: monthly, headMonths: headMonths, effMonths: effMonths,
+           headFTE: headMonths/12, effFTE: effMonths/12, perFullAE: perFullAE, hireMo: hireMo, lag: lag };
+}
+
+function calcSAM(S, T){
+  var s = S.sam; if (!s.enabled) return { covered: 0, opps: 0, pipe: 0, wins: 0, inYear: 0, monthly: zeros(), enabled: false };
+  var start = clamp(s.startMo,1,12) - 1 + T.aeDelay;
+  var covered = Math.min(Math.max(0,s.count) * Math.max(0,s.accountsPer), Math.max(0,s.eligible));
+  var opps = covered * pct(s.oppRate), pipe = opps * Math.max(0,s.oppValue), wins = opps * pct(s.win);
+  var goLive = start + clamp(s.rampMo,0,12) + clamp(s.cycle,0,36) + T.cycleDelay + clamp(s.impl,0,24) + T.implDelay;
+  var mm = phase(wins * Math.max(0,s.oppValue) * pct(s.inYear), goLive), inYr = sum(mm);
+  return { covered: covered, opps: opps, pipe: pipe, wins: wins, inYear: inYr, monthly: mm, goLive: goLive, enabled: true };
+}
+
+function calcInstalled(S, T, samRes){
+  var i = S.installed; if (!i.enabled) return { eligible: 0, opps: 0, wins: 0, inYear: 0, monthly: zeros(), enabled: false, overlap: 0 };
+  var eligible = Math.max(0,i.customers) * pct(i.eligiblePct);
+  var overlap = samRes.enabled ? Math.min(eligible, samRes.covered) : 0;   /* accounts already covered by SAMs are excluded */
+  var net = Math.max(0, eligible - overlap);
+  var opps = net * pct(i.oppPct), wins = opps * pct(i.win);
+  var goLive = clamp(i.closeMo,0,24) + T.cycleDelay + T.implDelay;
+  var mm = phase(wins * Math.max(0,i.avgValue) * pct(i.inYear), goLive), inYr = sum(mm);
+  return { eligible: eligible, overlap: overlap, net: net, opps: opps, wins: wins, inYear: inYr, monthly: mm, goLive: goLive, enabled: true };
+}
+
+function calcLevers(S, T){
+  var total = 0, totalW = 0, monthly = zeros(), rows = [];
+  S.levers.forEach(function(l){
+    if (l.enabled === false) { rows.push({ id: l.id, rev: 0, weighted: 0 }); return; }
+    var rev = Math.max(0, l.rev), start = (clamp(l.timingQ,1,4)-1)*3 + T.productDelayQ*3;
+    var mm = phase(rev, start), r = sum(mm);          /* lever value entered as annualized contribution */
+    rows.push({ id: l.id, rev: r, weighted: r * pct(l.conf), start: start });
+    total += r; totalW += r * pct(l.conf); addTo(monthly, mm);
+  });
+  return { rows: rows, total: total, weighted: totalW, monthly: monthly };
+}
+
+/* ---------- master compute ---------- */
+function compute(S){
+  var T = S.timing, C = S.conf, on = S.toggles;
+  var seg = calcSegments(S, T), mem = calcMemberPrograms(S, T), fun = calcFunnels(S, T), fq = calcFQHC(S, T);
+  var ts = calcTradeshow(S, T), wb = calcWebinar(S, T), np = calcNewPrograms(S, T), pl = calcPlatform(S, T);
+  var ae = calcAE(S, T), sam = calcSAM(S, T), inst = calcInstalled(S, T, sam), lv = calcLevers(S, T);
+
+  function agg(list){ var v = 0, m = zeros(); list.forEach(function(x){ v += x.v; addTo(m, x.m); }); return { v: v, m: m }; }
+  var rec = agg(seg.recognized), con = agg(seg.contracted), pipe = agg(seg.pipeline);
+  var pipeConfAvg = seg.pipeline.length ? seg.pipeline.reduce(function(a,p){ return a + p.conf; },0)/seg.pipeline.length : C.pipeline;
+  var memConfAvg = S.programs.length ? S.programs.reduce(function(a,p){ return a+p.conf; },0)/S.programs.length : C.member;
+  var funConfAvg = S.funnels.length ? S.funnels.reduce(function(a,f){ return a+f.conf; },0)/S.funnels.length : C.funnels;
+
+  var sources = [
+    src('recognized', 'Existing recognized / recurring', on.recognized ? rec.v : 0, on.recognized ? rec.m : zeros(), C.recognized, { state: 'Recognized', motion: 'Existing', isNew: false }),
+    src('contracted', 'Contracted / pending (non-member)', on.contracted ? con.v : 0, on.contracted ? con.m : zeros(), C.contracted, { state: 'Contracted / Pending', motion: 'Existing', isNew: false }),
+    src('member', 'Member-based program revenue', on.member ? mem.total : 0, on.member ? mem.monthly : zeros(), Math.round(memConfAvg), { state: 'Contracted / Pending', motion: 'Existing', isNew: false, memberDependent: true }),
+    src('pipeline', 'Existing pipeline', on.pipeline ? pipe.v : 0, on.pipeline ? pipe.m : zeros(), Math.round(pipeConfAvg), { state: 'Pipeline', motion: 'New logo', isNew: true }),
+    src('funnels', 'Marketing-sourced acquisition (baseline funnels)', on.funnels ? fun.total : 0, on.funnels ? fun.monthly : zeros(), Math.round(funConfAvg), { state: 'Pipeline', motion: 'Marketing-sourced', isNew: true }),
+    src('fqhc', 'FQHC market expansion', on.fqhc ? fq.inYear : 0, on.fqhc ? fq.monthly : zeros(), S.fqhc.conf, { state: 'Pipeline', motion: 'New market', isNew: true }),
+    src('tradeshow', 'Trade show contribution', on.tradeshow ? ts.inYear : 0, on.tradeshow ? ts.monthly : zeros(), S.tradeshow.conf, { state: 'Pipeline', motion: 'Marketing-sourced', isNew: true }),
+    src('webinar', 'Webinar contribution', on.webinar ? wb.inYear : 0, on.webinar ? wb.monthly : zeros(), S.webinar.conf, { state: 'Pipeline', motion: 'Marketing-sourced', isNew: true }),
+    src('programs', 'New program revenue', on.programs ? np.total : 0, on.programs ? np.monthly : zeros(), C.programs, { state: 'Initiative', motion: 'New programs', isNew: true, memberDependent: true }),
+    src('platform', 'New platform capability revenue', on.platform ? pl.total : 0, on.platform ? pl.monthly : zeros(), C.platform, { state: 'Initiative', motion: 'Product / platform', isNew: true }),
+    src('ae', 'Outbound AE contribution', on.ae ? ae.inYear : 0, on.ae ? ae.monthly : zeros(), Math.round((C.aeHiring + C.aeProd)/2), { state: 'Pipeline', motion: 'Outbound', isNew: true }),
+    src('sam', 'Strategic account expansion', on.sam ? sam.inYear : 0, on.sam ? sam.monthly : zeros(), C.sam, { state: 'Pipeline', motion: 'Expansion', isNew: true }),
+    src('installed', 'Installed-base expansion', on.installed ? inst.inYear : 0, on.installed ? inst.monthly : zeros(), C.installed, { state: 'Pipeline', motion: 'Expansion', isNew: true }),
+    src('levers', 'User-defined growth levers', on.levers ? lv.total : 0, on.levers ? lv.monthly : zeros(), C.levers, { state: 'Initiative', motion: 'Other', isNew: true })
+  ];
+
+  var projected = 0, weighted = 0, monthly = zeros(), wMonthly = zeros();
+  sources.forEach(function(s){ projected += s.gross; weighted += s.weighted; addTo(monthly, s.monthly); addTo(wMonthly, s.wMonthly); });
+  var target = Math.max(1, S.target), gap = target - projected, wGap = target - weighted;
+  var quarterly = [0,1,2,3].map(function(q){ return monthly[q*3] + monthly[q*3+1] + monthly[q*3+2]; });
+  var wQuarterly = [0,1,2,3].map(function(q){ return wMonthly[q*3] + wMonthly[q*3+1] + wMonthly[q*3+2]; });
+  var cum = [], wcum = [], tcum = [], run = 0, wrun = 0;
+  for (var m = 0; m < 12; m++){ run += monthly[m]; wrun += wMonthly[m]; cum.push(run); wcum.push(wrun); tcum.push(target * (m+1)/12); }
+
+  /* dependency shares of TARGET */
+  function g(k){ var s = sources.filter(function(x){ return x.key === k; })[0]; return s ? s.gross : 0; }
+  var dep = {
+    existing: g('recognized') + g('contracted') + g('member'),
+    pipeline: g('pipeline'),
+    initiatives: g('fqhc') + g('programs') + g('platform') + g('levers'),
+    capacity: g('ae') + g('sam'),
+    product: g('programs') + g('platform'),
+    marketing: g('funnels') + g('tradeshow') + g('webinar'),
+    member: g('member') + g('programs')
+  };
+  /* certainty mix */
+  var certMix = {}; sources.forEach(function(s){ certMix[s.cert] = (certMix[s.cert]||0) + s.gross; });
+  var lowConf = sources.filter(function(s){ return s.conf < 65; }).reduce(function(a,s){ return a + s.gross; }, 0);
+
+  /* Plan Confidence Score — illustrative portfolio metric */
+  var W = S.weights, wt = Math.max(1, W.coverage + W.certainty + W.timing);
+  var covScore = Math.min(1, weighted / target);
+  var certScore = projected > 0 ? ((certMix['More Certain']||0) + 0.6*(certMix['Moderately Certain']||0) + 0.3*(certMix['Execution Dependent']||0)) / projected : 0;
+  var q4Share = projected > 0 ? quarterly[3] / projected : 0;
+  var timeScore = 1 - Math.max(0, q4Share - 0.30) * 2;  /* penalty when Q4 carries more than ~30% */
+  var planScore = 100 * (W.coverage*covScore + W.certainty*certScore + W.timing*Math.max(0,Math.min(1,timeScore))) / wt;
+
+  var status = projected >= target*1.03 ? 'Above Plan' : projected >= target*0.98 ? 'At Plan' : projected >= target*0.90 ? 'Near Plan' : 'Below Plan';
+
+  return { sources: sources, projected: projected, weighted: weighted, gap: gap, wGap: wGap, target: target, baseline: S.baseline,
+           growth: projected / Math.max(1,S.baseline) - 1, coverage: projected/target, wCoverage: weighted/target,
+           monthly: monthly, wMonthly: wMonthly, quarterly: quarterly, wQuarterly: wQuarterly, cum: cum, wcum: wcum, tcum: tcum,
+           dep: dep, certMix: certMix, lowConf: lowConf, q4Share: q4Share, planScore: planScore, status: status,
+           seg: seg, mem: mem, fun: fun, fq: fq, ts: ts, wb: wb, np: np, pl: pl, ae: ae, sam: sam, inst: inst, lv: lv,
+           requiredGrowth: target / Math.max(1,S.baseline) - 1, requiredGap: target - S.baseline };
+}
+
+/* ---------- gap closure ---------- */
+function calcGapClosure(S, R){
+  var gap = Math.max(0, R.gap), out = { gap: gap, items: [] };
+  if (gap <= 0) return out;
+  function fun(id){ return S.funnels.filter(function(f){ return f.id === id; })[0]; }
+  function segRealized(idx){ var g = S.segments[idx]; if (!g) return 0.5; var goLive = (clamp(g.closeQ,1,4)-1)*3 + 1 + clamp(g.impl,0,24) + S.timing.implDelay; return remaining(goLive); }
+  function motion(label, seg, f, idx){
+    var g = S.segments[idx]; if (!g) return;
+    var perWin = Math.max(0,g.deal) * pct(g.inYear) * segRealized(idx); if (perWin <= 0) return;
+    var wins = Math.ceil(gap / perWin), opps = pct(g.win) > 0 ? Math.ceil(wins / pct(g.win)) : null;
+    out.items.push({ q: 'Additional ' + label + ' wins (at current close and go-live timing)', v: wins, note: 'Gap ÷ (' + label + ' deal × ' + Math.round(100*segRealized(idx)) + '% in-year realization)' });
+    if (opps !== null) out.items.push({ q: 'Additional ' + label + ' opportunities at current win rate', v: opps, note: 'Wins ÷ ' + g.win + '% win rate' });
+    if (f && opps !== null){
+      var sql = pct(f.s2o) > 0 ? Math.ceil(opps / pct(f.s2o)) : null, mql = sql !== null && pct(f.m2s) > 0 ? Math.ceil(sql / pct(f.m2s)) : null;
+      if (sql !== null) out.items.push({ q: 'Incremental ' + label + ' SQLs', v: sql, note: 'Opportunities ÷ ' + f.s2o + '% SQL→Opp' });
+      if (mql !== null) out.items.push({ q: 'Incremental ' + label + ' MQLs', v: mql, note: 'SQLs ÷ ' + f.m2s + '% MQL→SQL' });
+    }
+  }
+  motion('payer', 's1', fun('f1'), 0);
+  motion('provider', 's2', fun('f2'), 1);
+  var perAE = R.ae.perFullAE; if (perAE > 0) out.items.push({ q: 'Additional fully productive AEs, measured on 2026 in-year revenue', v: Math.ceil(gap/perAE), note: 'Gap ÷ ' + fmtMoney(perAE) + ' in-year revenue per fully productive AE at the current cycle + implementation lag. Capacity added in 2026 lands mostly in 2027.' });
+  out.items.push({ q: 'Additional expansion revenue', v: gap, money: true, note: 'Direct in-year revenue required from expansion motions' });
+  var rpm = 0, n = 0; S.programs.forEach(function(p){ if (p.rpm>0){ rpm += p.rpm; n++; } }); rpm = n ? rpm/n : 0;
+  if (rpm > 0) out.items.push({ q: 'Additional member volume at average revenue per member (full-year equivalent)', v: Math.ceil(gap/rpm), note: 'Gap ÷ ' + fmtMoney(rpm, true) + ' average revenue per member' });
+  return out;
+}
+
+/* ---------- sensitivity ---------- */
+function calcSensitivity(S){
+  var base = compute(S).projected;
+  function run(label, mut){ var c = clone(S); mut(c); return { label: label, delta: compute(c).projected - base }; }
+  function fun(c,id){ return c.funnels.filter(function(f){ return f.id===id; })[0]; }
+  var tests = [
+    run('+1 pt payer win rate', function(c){ var f=fun(c,'f1'); if(f) f.o2w+=1; c.segments[0].win+=1; }),
+    run('+5 pts payer win rate', function(c){ var f=fun(c,'f1'); if(f) f.o2w+=5; c.segments[0].win+=5; }),
+    run('+10% payer deal size', function(c){ var f=fun(c,'f1'); if(f) f.deal*=1.1; c.segments[0].deal*=1.1; }),
+    run('+10% provider deal size', function(c){ var f=fun(c,'f2'); if(f) f.deal*=1.1; c.segments[1].deal*=1.1; }),
+    run('+10% MQL volume (all funnels)', function(c){ c.funnels.forEach(function(f){ f.mqls*=1.1; f.leads*=1.1; }); }),
+    run('+5 pts MQL → SQL (all funnels)', function(c){ c.funnels.forEach(function(f){ f.m2s+=5; }); }),
+    run('+5 pts SQL → Opportunity (all funnels)', function(c){ c.funnels.forEach(function(f){ f.s2o+=5; }); }),
+    run('+1 AE hired at plan date', function(c){ c.ae.hires+=1; }),
+    run('+1 SAM', function(c){ c.sam.count+=1; }),
+    run('+1 trade show', function(c){ c.tradeshow.shows+=1; }),
+    run('+1 webinar', function(c){ c.webinar.count+=1; }),
+    run('+10% FQHC accounts targeted', function(c){ c.fqhc.targeted*=1.1; }),
+    run('+10% member volume (unconfirmed programs)', function(c){ c.memberVar.base+=10; c.memberVar.active='base'; }),
+    run('1-month program launch delay', function(c){ c.timing.programDelay+=1; }),
+    run('1-month seller hiring delay', function(c){ c.timing.aeDelay+=1; })
+  ];
+  tests.sort(function(a,b){ return Math.abs(b.delta) - Math.abs(a.delta); });
+  return { base: base, tests: tests };
+}
+
+function calcTimingRisk(S){
+  var base = compute(S).projected;
+  function run(label, key, amt){ var c = clone(S); c.timing[key]+=amt; return { label: label, key: key, delta: compute(c).projected - base }; }
+  return [ run('+1 month AE hiring delay','aeDelay',1), run('+1 month sales cycle','cycleDelay',1), run('+1 month implementation delay','implDelay',1),
+           run('+1 quarter product / program launch delay','productDelayQ',1), run('+1 month member-file delay','fileDelay',1), run('+1 month program start delay','programDelay',1) ];
+}
+
+/* ---------- executive risks (deterministic rules) ---------- */
+function calcRisks(S, R){
+  var risks = [], t = R.target;
+  if (R.lowConf / t > 0.40) risks.push({ level: 'High', text: 'A large portion of the plan (' + Math.round(100*R.lowConf/t) + '% of target) depends on lower-confidence growth initiatives.' });
+  var aeShare = R.sources.filter(function(s){ return s.key==='ae'; })[0].gross / t;
+  if (aeShare > 0.05 && R.ae.hireMo >= 3) risks.push({ level: 'Medium', text: 'Seller hiring timing creates material in-year execution risk: new hires are not fully productive until month ' + (R.ae.hireMo + S.ae.ramp.length) + '.' });
+  if (R.mem.subject / t > 0.03) risks.push({ level: 'Medium', text: 'Pending revenue remains sensitive to member reconciliation: ' + Math.round(100*R.mem.subject/R.mem.total||0) + '% of member-program revenue is still subject to a member file.' });
+  var pipeNeed = R.target - (R.dep.existing); var pipeHave = R.seg.pipeline.reduce(function(a,p){ return a+p.gross; },0) + R.fun.gross;
+  if (pipeHave < pipeNeed * 2.5 && pipeNeed > 0) risks.push({ level: 'High', text: 'Existing plus modeled pipeline (' + fmtMoney(pipeHave) + ') is below ~2.5× coverage of the ' + fmtMoney(pipeNeed) + ' in non-existing revenue the plan requires.' });
+  if (R.q4Share > 0.35) risks.push({ level: 'Medium', text: 'Revenue projection is significantly back-weighted: ' + Math.round(100*R.q4Share) + '% of projected revenue lands in Q4.' });
+  if (R.gap > 0) risks.push({ level: R.gap/t > 0.1 ? 'High' : 'Medium', text: 'Modeled revenue is ' + fmtMoney(R.gap) + ' below target before confidence weighting.' });
+  if (R.wGap > 0 && R.gap <= 0) risks.push({ level: 'Medium', text: 'The plan reaches target only before confidence weighting; the confidence-weighted projection is ' + fmtMoney(R.wGap) + ' short.' });
+  if ((R.dep.product / t) > 0.08) risks.push({ level: 'Medium', text: 'Product and program launch timing carries ' + Math.round(100*R.dep.product/t) + '% of target; a one-quarter slip removes most of it from the year.' });
+  if (!risks.length) risks.push({ level: 'Low', text: 'No material planning risks triggered by current assumptions.' });
+  return risks;
+}
+
+/* ---------- formatting ---------- */
+function fmtMoney(v, detail){
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  var s = v < 0 ? '-' : '', a = Math.abs(v);
+  if (detail) return s + '$' + Math.round(a).toLocaleString('en-US');
+  if (a >= 1e6) return s + '$' + (a/1e6).toFixed(a >= 1e7 ? 1 : 2).replace(/\.?0+$/,'') + 'M';
+  if (a >= 1e3) return s + '$' + Math.round(a/1e3) + 'K';
+  return s + '$' + Math.round(a);
+}
+function fmtPct(v, d){ if (v===null||v===undefined||isNaN(v)) return '—'; return (v*100).toFixed(d===undefined?1:d) + '%'; }
+function fmtInt(v){ if (v===null||v===undefined||isNaN(v)) return '—'; return Math.round(v).toLocaleString('en-US'); }
+function fmtNum(v,d){ if (v===null||v===undefined||isNaN(v)) return '—'; return Number(v).toFixed(d===undefined?1:d); }
+function fmtSigned(v){ if (v===null||v===undefined||isNaN(v)) return '—'; return (v>=0?'+':'') + fmtMoney(v); }
+
+</script>
+<script>
+/* ===================== GUIDE: plain-English description of every component ===================== */
+var GUIDE = {
+ '01': { t:'The Situation', w:'A short version of the case. In 2025 the company had revenue in four different states: money already recognized, contracts signed but not yet launched, programs whose value depended on member counts, and open sales pipeline. Leadership needed to know whether a $20M expectation for 2026 was credible.', y:'Every section after this one exists to answer one question: what has to be true for the business to get from $10.6M to $20M? The three boxes separate "the numbers can add up" from "the business can actually do it" from "what it is really worth once you discount for risk."', h:'Read it once. Then use the Scorecard and the sticky strip at the top to keep the answer in view while you change assumptions below.' },
+ '02': { t:'Executive Scorecard', w:'The headline numbers: where 2025 finished, what 2026 is supposed to be, what the model currently projects, what that projection is worth after confidence weighting, and the gap between them.', y:'This is the board slide. Everything else in the model rolls up to these eight numbers. "Projected" adds up every modeled source at face value. "Confidence-weighted" multiplies each source by how likely it is to happen. The difference between the two is the amount of the plan resting on hope.', h:'Change the target (Section 27, Target Backsolve, lives here) to test any number, not just $20M. The gap, required growth, required wins and required funnel all recalculate. The status band is based on the unweighted projection versus target.' },
+ '03': { t:'Is the 2026 Plan Supported?', w:'A breakdown of the target by what it depends on: existing and contracted revenue, existing pipeline, marketing, hiring, product launches, new initiatives, and member-volume assumptions.', y:'Two plans can both reach $20M on paper. One might be 80% existing business; the other might be 50% new hires and product launches that have not happened yet. This section shows which kind of plan you are looking at.', h:'The certainty labels (More Certain through Highly Assumption Dependent) come from each source\u2019s confidence factor. The composite score is an illustrative portfolio metric, not something used historically; its weights are editable so you can see how much the score depends on how you define "good."' },
+ '04': { t:'Revenue Bridge', w:'A waterfall from existing recognized revenue through every growth source to the projected 2026 total, with the 2025 baseline and the target drawn as reference lines.', y:'It answers "where does the revenue come from?" in one picture. Small bars are small contributions no matter how much attention they get in planning meetings.', h:'Use the toggles to switch any source off and see the plan without it. The bridge starts from the 2026 carry-forward of existing business rather than stacking sources on top of the 2025 total, so nothing is counted twice.' },
+ '05': { t:'Revenue Mix by Segment', w:'Each customer segment (payers, providers, strategic/indirect, FQHCs) with its existing recognized revenue, contracted-but-not-launched revenue, and open pipeline.', y:'Segments behave differently: a payer deal is roughly $300K with a long cycle; a provider deal is roughly $125K and closes faster. Modeling them together hides that.', h:'Payer and provider deal sizes are known planning references from the engagement, marked Known. Everything else is editable. Pipeline revenue is probability-weighted (opportunities \u00d7 win rate) and only counts for the months after go-live, so a Q3 close with a two-month implementation contributes very little to 2026.' },
+ '06': { t:'Member-Based Program Revenue', w:'Programs where revenue equals member count \u00d7 revenue per member. The contract set an expected population; the customer\u2019s member file, received roughly two weeks after launch, set the actual one.', y:'This is the part most forecasts miss. A signed $480K contract can become $408K when the file arrives with 34,000 members instead of 40,000 \u2014 or more if the population is larger. Signed did not mean fixed.', h:'Each row shows expected revenue, reconciled revenue (once a file exists), the member variance and the true-up. Programs without a file are flagged "subject to reconciliation" and use the member-variance scenario from Section 07. Add, duplicate or delete programs to test different books of business.' },
+ '07': { t:'Member Count Uncertainty', w:'A downside / base / upside assumption for how far actual member counts might land from expected counts, applied only to programs that have not yet received a member file.', y:'It puts a number on the risk in Section 06. If three programs are still waiting on files, a 10% shortfall in population is real money that no sales forecast would ever show.', h:'Set the three percentages, then click a chip to make one of them active. The three cards show member revenue, projected total and gap under each, and the swing between downside and upside.' },
+ '08': { t:'Revenue State Lifecycle', w:'The eight steps a member-based contract moves through, from signature to recognized revenue, with the selected program highlighted at its current step.', y:'It makes the moving target visible. The two dashed steps, Pending Revenue and Revenue Reconciliation, are where the value can change even though the contract is already signed.', h:'Pick a program with the chips. The four cards show what it was worth at signature, what the model currently expects, what it reconciled to (if a file exists), and the variance.' },
+ '09': { t:'Customer Operations Dependency', w:'The hand-offs between Sales, Customer Operations, Revenue Operations and Finance that were required to know what a contract was actually worth.', y:'The CRM alone could not answer the question. Launch timing and actual population lived with Customer Operations; recognition lived with Finance. Revenue Operations had to connect them or the forecast was fiction.', h:'Narrative only, nothing to edit. This is the operating reason the model exists.' },
+ '10': { t:'Acquisition Funnel Model', w:'Baseline marketing-sourced demand by segment: MQLs (entered directly or derived from leads), conversion rates through SQL, opportunity and closed-won, then deal size, cycle and implementation delay.', y:'It converts a marketing plan into revenue, and it shows why long cycles hurt: opportunities are created evenly through the year, and only those that go live by December count, and only for the months remaining.', h:'Switch "MQL input" to derive MQLs from leads. Trade shows, webinars and outbound are modeled separately as incremental motions so they are not counted twice here. In-year revenue is recognized ratably from go-live; the "realization adjustment" is an extra haircut on top, default 100%.' },
+ '11': { t:'Required Funnel, Working Backward', w:'Enter the revenue you need from a motion and get the wins, opportunities, SQLs, MQLs and leads required at current conversion rates.', y:'Planning usually runs forward ("we will get 240 MQLs"). This runs it in reverse ("we need $2M; what does that take?") \u2014 which is how a board conversation actually goes.', h:'Type a revenue requirement in the first column. Counts round upward because partial opportunities do not exist. The per-win value reflects current cycle and go-live timing, so a longer cycle raises every required number.' },
+ '12': { t:'FQHC Market Expansion', w:'A top-down model for entering Federally Qualified Health Centers: addressable accounts, how many are targeted, reach and engagement rates, then a standard funnel to revenue.', y:'New-market entry is usually a line item with a hopeful number next to it. This forces the assumptions that produce that number into the open.', h:'All values are planning assumptions. Note how small the in-year revenue is even with hundreds of accounts targeted \u2014 a consequence of conversion math plus timing, not pessimism.' },
+ '13': { t:'Trade Show Model', w:'Number of events, cost per event, leads per event, then funnel conversion to revenue. Also spend per opportunity and revenue and pipeline per event.', y:'The original planning work used historical trade-show attribution to estimate what more events would do. This lets you test that assumption instead of accepting it.', h:'Increase the number of shows and watch cost per opportunity and in-year revenue. The revenue-to-spend ratio is not labeled ROI because there is no contribution-margin economics in the model.' },
+ '14': { t:'Webinar Model', w:'Same structure as trade shows, for webinars: registrations, attendance, MQL rate, funnel, cost.', y:'Having both models side by side is the point. Cheap channels with low conversion and expensive channels with high conversion look very different once you compare cost per opportunity.', h:'Editable like the trade-show model. Results feed the channel comparison in Section 15.' },
+ '15': { t:'Marketing Channel Comparison', w:'One table comparing trade shows, webinars, outbound and user-defined levers on spend, MQLs, SQLs, opportunities, pipeline, expected revenue, cost per opportunity and confidence.', y:'This is the table a CMO and CFO argue over. The model makes both sides use the same assumptions.', h:'Nothing to edit here; change the underlying models and this updates. Dashes mean the metric does not apply to that channel (outbound has no marketing spend, for example).' },
+ '16': { t:'New Program Revenue', w:'Growth from programs not yet launched: addressable customers, expected adoption, expected members per customer, revenue per member, launch quarter, execution probability and adoption confidence.', y:'Product launches carry two kinds of uncertainty at once: will it ship on time, and will customers adopt it. Multiplying them together is usually humbling.', h:'Launch quarter plus implementation delay sets the first revenue month. A Q3 launch with a one-month implementation contributes four months of revenue at most. Names are placeholders; no real program names are used.' },
+ '17': { t:'New Platform Capability Model', w:'Growth from new capabilities sold into the installed base (with an attach rate) and to new logos, with an average incremental revenue per adopting account.', y:'Separated from new programs because the economics are different: capabilities attach to existing accounts and are priced per account, not per member.', h:'Adoption and attach rates are the levers. Launch quarter plus sales cycle plus implementation sets go-live.' },
+ '18': { t:'Outbound AE Capacity Model', w:'Existing sellers, new hires, hire month, a month-by-month ramp curve, opportunities per productive seller, win rate, deal size, cycle, implementation, attrition and productivity variability.', y:'The difference between headcount and effective capacity is the whole lesson. Three sellers hired in March, with a five-month ramp and a seven-month cycle-plus-implementation lag, contribute almost nothing to the year they were hired in.', h:'Change the hire month and watch the in-year number. The chart shows nominal headcount (grey) against effective productive capacity (teal) by month. Existing sellers count only for outbound-sourced opportunities so they are not double counted with the funnels.' },
+ '19': { t:'Strategic Account Manager Expansion', w:'A land-and-expand model: number of SAMs, start and ramp, accounts per SAM, eligible accounts, expansion opportunity rate, value, win rate, cycle and implementation.', y:'Expansion is typically the highest-confidence growth outside existing business, but it still has a start month, a ramp and a cycle. This shows when it actually lands.', h:'Turn the model off to see the plan without it. Accounts covered here are removed from the installed-base model in Section 20 so expansion is never counted twice.' },
+ '20': { t:'Installed-Base Expansion', w:'A direct expansion model without new headcount: existing customers, share that is expansion-eligible, opportunity rate, average value, win rate and time to close.', y:'Works alone or alongside the SAM model. The overlap rule is what keeps the two honest.', h:'The "removed (covered by SAMs)" card shows how many eligible accounts were already claimed by Section 19.' },
+ '21': { t:'Confidence Model', w:'A 0\u2013100% confidence factor for every revenue motion, and a table showing each source unweighted, weighted, and the haircut between them.', y:'Not all planned growth deserves equal weight. Recognized revenue at 95% and a user-defined lever at 40% should not add together as if they were the same kind of dollar.', h:'Segment, program and funnel confidences are edited in their own tables; this section holds the rest. The certainty category is derived from the confidence value.' },
+ '22': { t:'Three Types of Uncertainty', w:'Commercial (will we win it), execution (will we do it on time), and economic (once done, what is it worth).', y:'Most forecasts only model the first. This model applies all three, which is why signed contracts still carry uncertainty here.', h:'Reference only. Win rates are commercial, hire months and launch quarters are execution, member counts and adoption are economic.' },
+ '23': { t:'Scenario Planning', w:'Conservative, Base, Upside and Custom. Presets change specific operating assumptions (win rates, MQL volume, conversion, member variance, hire timing, productivity, launch timing, adoption, execution probability, cycle, confidence) rather than multiplying the total by a percentage.', y:'A scenario that just scales the answer by 85% teaches nothing. A scenario that delays hiring two months and drops win rates five points shows which assumptions actually matter.', h:'Editing any value switches you to Custom. "Assumptions changed vs. Base" lists exactly what differs. Reset scenario returns to the preset; Save custom stores your version in this browser.' },
+ '24': { t:'Scenario Comparison', w:'The four scenarios side by side on revenue, weighted revenue, gap, growth, coverage, pipeline required, wins, capacity, and contributions by motion.', y:'Boards ask "what is the range?" This is the range, with the reasons.', h:'Read down each column. The rows near the bottom (marketing, expansion, product, member-dependent) explain where the difference between Conservative and Upside comes from.' },
+ '25': { t:'What Moves the Number?', w:'Fifteen single-variable changes (one more AE, five points of win rate, a one-month launch delay, and so on), each re-run through the whole model and ranked by effect on projected revenue.', y:'It tells leadership where to spend attention. If five points of MQL-to-SQL conversion is worth more than a new hire, that is a staffing decision.', h:'Effects are from the current state, one at a time, and are not additive. Change an assumption elsewhere and the ranking updates.' },
+ '26': { t:'What Has To Be True?', w:'If the projection is below target, the remaining gap expressed as additional payer wins, provider wins, opportunities, SQLs, MQLs, fully productive sellers, expansion revenue or member volume.', y:'This is the most useful page in a planning meeting. A $3M gap is abstract; "21 more payer wins at current timing" is a conversation.', h:'Everything uses current assumptions and rounds upward. The seller count is measured on 2026 in-year revenue and is deliberately large: it is the honest way to show that capacity added in 2026 lands mostly in 2027.' },
+ '27': { t:'Target Backsolve', w:'The target field in the Executive Scorecard. Change it to any number and the entire model recalculates.', y:'$20M is the historical planning target, but the model should work for any expectation.', h:'Gap, required growth, required funnel, required capacity and scenario coverage all follow the target you enter. Reset to case study restores $20M.' },
+ '28': { t:'Time-Phased Model', w:'Projected revenue by month, quarter or year, with the confidence-weighted overlay, plus cumulative projected against a straight-line cumulative target.', y:'Annual totals hide timing. Revenue that lands in Q4 counts once for the year but was not available to fund the year.', h:'Switch the period with the chips. Every source phases from its own go-live month, so hiring, launches and program starts all show up where they actually land.' },
+ '29': { t:'Plan Timing Risk', w:'Six delays (hiring, sales cycle, implementation, product launch, member file, program start) with their individual effect on annual revenue, and toggles to apply them to the live model.', y:'Annual planning fails on "when" more often than on "whether." A one-month implementation delay across every deal is worth more than most growth initiatives.', h:'The list shows each delay alone from the current state. Tick a toggle to apply it and see everything else update.' },
+ '30': { t:'Revenue Composition', w:'Projected revenue cut four ways: by revenue state, by growth motion, by confidence category, and existing versus new.', y:'Different audiences want different cuts. Finance cares about state; the CRO cares about motion; the board cares about how much is new.', h:'Charts only; they follow the model.' },
+ '31': { t:'Assumption Register', w:'A central list of the model\u2019s key assumptions with the current value, category, source type (known, operating, planning, illustrative) and notes. Values are editable here too.', y:'An audit trail. When someone asks "where did that number come from," this is the answer.', h:'Filter by text or source type. Editing a value here updates the same field everywhere else.' },
+ '32': { t:'User-Defined Growth Levers', w:'Add your own growth initiatives with a name, category, annualized value, timing quarter, confidence and downside / base / upside values.', y:'Planning models evolve. This lets the model represent an initiative the original reconstruction did not include without touching the code.', h:'Enable or disable each lever. Value phases ratably from the timing quarter.' },
+ '33': { t:'Executive Risks', w:'Planning risks generated by fixed rules from the model state: over-reliance on low-confidence sources, late hiring, member-reconciliation exposure, thin pipeline coverage, Q4 back-weighting, and the gap itself.', y:'A risk list that updates with the assumptions is more honest than one written once for the deck.', h:'Nothing to edit. No generative AI is involved; every sentence is a deterministic rule you could reproduce by hand.' },
+ '34': { t:'Board View', w:'A presentation mode. Hides every editable control and detailed module and shows only the outputs: scorecard, plan support, bridge, revenue mix, confidence mix, quarterly profile, major assumptions, top five risks, top five levers, and What Has To Be True.', y:'The board should see the answer and the reasons, not four hundred input fields.', h:'Both views use the same model state. Adjust assumptions in Operator view, switch to Board view to present, and print from there.' },
+ '35': { t:'Operator View', w:'The full working mode. Every funnel, capacity, program, member, marketing, expansion, product, timing, confidence and scenario control is exposed.', y:'This is where the model is actually built and tested.', h:'Default view. Everything you change here is what Board view summarizes.' },
+ '36': { t:'Original Model Architecture', w:'How the 2025 system was actually put together: Finance as the financial system of record, HubSpot custom objects as the operating revenue model, Customer Operations feeding launch and member data, Revenue Operations reconciling and forecasting, Excel for scenario planning.', y:'This application recreates the logic of that ecosystem. It did not exist in 2025; the ecosystem did.', h:'Reference only.' },
+ '37': { t:'Before and After', w:'What planning looked like before the model (prior-year extrapolation, separate functional assumptions, revenue states evaluated apart) and what leadership could evaluate after.', y:'The claim is about capability, not a quantified business outcome, because none is being asserted here.', h:'Reference only.' },
+ '38': { t:'Core Message', w:'The closing statement: annual planning is the operating architecture that connects Finance, Sales, Marketing, Product, Customer Operations, customer economics, pipeline, capacity, timing and uncertainty into one testable model.', y:'If you take one thing from the artifact, it is that a revenue target is not a plan.', h:'Reference only.' }
+};
+</script>
+<script>
+/* ===================== UI LAYER ===================== */
+(function(){
+var S = clone(DEFAULTS), BASE = clone(DEFAULTS), customStash = null, R = null, saveTimer = null;
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+
+/* ---------- path helpers ---------- */
+function getP(o, p){ return p.split('.').reduce(function(a,k){ return a == null ? undefined : a[k]; }, o); }
+function setP(o, p, v){ var ks = p.split('.'), last = ks.pop(), t = ks.reduce(function(a,k){ if (a[k] == null) a[k] = {}; return a[k]; }, o); t[last] = v; }
+function idxPath(arr, id){ var i = S[arr].findIndex(function(r){ return r.id === id; }); return arr + '.' + i; }
+function uid(pfx){ return pfx + Math.random().toString(36).slice(2,7); }
+
+/* ---------- input parsing / validation ---------- */
+function parse(kind, raw){
+  var v = parseFloat(String(raw).replace(/[^0-9.\-]/g,''));
+  if (isNaN(v)) v = 0;
+  if (kind === 'pct') return clamp(v, 0, 100);
+  if (kind === 'pctneg') return clamp(v, -100, 100);
+  if (kind === 'int') return Math.max(0, Math.round(v));
+  if (kind === 'money') return Math.max(0, v);
+  if (kind === 'mo') return clamp(Math.round(v), 1, 12);
+  if (kind === 'q') return clamp(Math.round(v), 1, 4);
+  if (kind === 'num') return Math.max(0, v);
+  if (kind === 'numneg') return v;
+  return v;
+}
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ---------- field spec renderer ---------- */
+function fieldHTML(f){
+  var v = getP(S, f.p), tag = f.tag ? '<span class="tag '+f.tag+'">'+({k:'Known',p:'Planning',i:'Illustrative',o:'Operating'}[f.tag])+'</span>' : '';
+  var inp;
+  if (f.k === 'sel'){ inp = '<select data-p="'+f.p+'" data-k="sel">' + f.opts.map(function(o){ return '<option value="'+o[0]+'"'+(String(o[0])===String(v)?' selected':'')+'>'+o[1]+'</option>'; }).join('') + '</select>'; }
+  else if (f.k === 'mo'){ inp = '<select data-p="'+f.p+'" data-k="mo">' + MONTHS.map(function(m,i){ return '<option value="'+(i+1)+'"'+(v===i+1?' selected':'')+'>'+m+'</option>'; }).join('') + '</select>'; }
+  else if (f.k === 'q'){ inp = '<select data-p="'+f.p+'" data-k="q">' + [1,2,3,4].map(function(q){ return '<option value="'+q+'"'+(v===q?' selected':'')+'>Q'+q+'</option>'; }).join('') + '</select>'; }
+  else if (f.k === 'bool'){ inp = '<select data-p="'+f.p+'" data-k="bool"><option value="1"'+(v?' selected':'')+'>Enabled</option><option value="0"'+(!v?' selected':'')+'>Disabled</option></select>'; }
+  else { var step = f.k==='money' ? 1000 : (f.k==='num'||f.k==='numneg') ? 0.1 : 1; inp = '<input type="number" step="'+step+'" data-p="'+f.p+'" data-k="'+f.k+'" value="'+(f.k==='money'?Math.round(v):v)+'">'; }
+  var unit = f.u ? '<span class="u">'+f.u+'</span>' : '';
+  var lab = f.tip ? '<span data-tip="'+esc(f.tip)+'">'+f.l+'</span>' : f.l;
+  return '<div class="f">'+tag+'<label>'+lab+'</label><div class="in">'+(f.k==='money'?'<span class="u">$</span>':'')+inp+unit+'</div>'+(f.h?'<div class="h">'+f.h+'</div>':'')+'</div>';
+}
+function calcHTML(l, id, h){ return '<div class="f calc"><label>'+l+'</label><div class="cv" data-out="'+id+'">—</div>'+(h?'<div class="h">'+h+'</div>':'')+'</div>'; }
+function renderFields(id, spec){ var el = $(id); if (el) el.innerHTML = spec.map(function(f){ return f.calc ? calcHTML(f.l, f.calc, f.h) : fieldHTML(f); }).join(''); }
+
+/* ---------- specs ---------- */
+var FIELDS = {
+  target: [ { p:'target', l:'2026 revenue target', k:'money', tag:'k', h:'Board planning target. Change it to backsolve any target.' },
+            { p:'baseline', l:'2025 projected revenue', k:'money', tag:'k', h:'Finance-reconciled trajectory at planning time.' },
+            { l:'Required growth', calc:'req-growth', h:'Target ÷ 2025 baseline − 1' }, { l:'Required new revenue', calc:'req-gap', h:'Target − 2025 baseline' } ],
+  weights: [ { p:'weights.coverage', l:'Weight: confidence-weighted coverage', k:'pct', tag:'i', u:'%' }, { p:'weights.certainty', l:'Weight: certainty mix', k:'pct', tag:'i', u:'%' }, { p:'weights.timing', l:'Weight: timing profile (Q4 load)', k:'pct', tag:'i', u:'%' } ],
+  memvar: [ { p:'memberVar.down', l:'Downside member variance', k:'pctneg', u:'%', tag:'p' }, { p:'memberVar.base', l:'Base member variance', k:'pctneg', u:'%', tag:'p' }, { p:'memberVar.up', l:'Upside member variance', k:'pctneg', u:'%', tag:'p' } ],
+  fqhc: [ { p:'fqhc.tam', l:'Total addressable accounts', k:'int', tag:'i' }, { p:'fqhc.serviceable', l:'Serviceable accounts', k:'int', tag:'i' }, { p:'fqhc.targeted', l:'Accounts targeted', k:'int', tag:'p' },
+          { p:'fqhc.reach', l:'Reach rate', k:'pct', u:'%', tag:'p' }, { p:'fqhc.engage', l:'Engagement rate', k:'pct', u:'%', tag:'p' }, { p:'fqhc.mql', l:'Engaged → MQL', k:'pct', u:'%', tag:'p' },
+          { p:'fqhc.sql', l:'MQL → SQL', k:'pct', u:'%', tag:'p' }, { p:'fqhc.opp', l:'SQL → Opportunity', k:'pct', u:'%', tag:'p' }, { p:'fqhc.win', l:'Win rate', k:'pct', u:'%', tag:'p' },
+          { p:'fqhc.deal', l:'Average deal size', k:'money', tag:'i' }, { p:'fqhc.cycle', l:'Sales cycle', k:'int', u:'mo', tag:'p' }, { p:'fqhc.impl', l:'Implementation delay', k:'int', u:'mo', tag:'p' },
+          { p:'fqhc.inYear', l:'Realization adjustment', k:'pct', u:'%', tag:'p', tip:'Applied on top of ratable in-year timing. 100% = recognized 1/12 per month from go-live.' }, { p:'fqhc.conf', l:'Confidence', k:'pct', u:'%', tag:'p' } ],
+  tradeshow: [ { p:'tradeshow.shows', l:'Number of trade shows', k:'int', tag:'p' }, { p:'tradeshow.cost', l:'Cost per show', k:'money', tag:'i' }, { p:'tradeshow.leads', l:'Leads per event', k:'int', tag:'i' },
+          { p:'tradeshow.l2m', l:'Lead → MQL', k:'pct', u:'%', tag:'p' }, { p:'tradeshow.m2s', l:'MQL → SQL', k:'pct', u:'%', tag:'p' }, { p:'tradeshow.s2o', l:'SQL → Opportunity', k:'pct', u:'%', tag:'p' },
+          { p:'tradeshow.win', l:'Win rate', k:'pct', u:'%', tag:'p' }, { p:'tradeshow.deal', l:'Average deal size (blended)', k:'money', tag:'i' }, { p:'tradeshow.cycle', l:'Sales cycle', k:'int', u:'mo', tag:'p' },
+          { p:'tradeshow.impl', l:'Implementation delay', k:'int', u:'mo', tag:'p' }, { p:'tradeshow.inYear', l:'Realization adjustment', k:'pct', u:'%', tag:'p' }, { p:'tradeshow.conf', l:'Confidence', k:'pct', u:'%', tag:'p' } ],
+  webinar: [ { p:'webinar.count', l:'Number of webinars', k:'int', tag:'p' }, { p:'webinar.reg', l:'Registrations per webinar', k:'int', tag:'i' }, { p:'webinar.attend', l:'Attendance', k:'pct', u:'%', tag:'i' },
+          { p:'webinar.mql', l:'Attendee → MQL', k:'pct', u:'%', tag:'p' }, { p:'webinar.m2s', l:'MQL → SQL', k:'pct', u:'%', tag:'p' }, { p:'webinar.s2o', l:'SQL → Opportunity', k:'pct', u:'%', tag:'p' },
+          { p:'webinar.win', l:'Win rate', k:'pct', u:'%', tag:'p' }, { p:'webinar.deal', l:'Average deal size (blended)', k:'money', tag:'i' }, { p:'webinar.cycle', l:'Sales cycle', k:'int', u:'mo', tag:'p' },
+          { p:'webinar.impl', l:'Implementation delay', k:'int', u:'mo', tag:'p' }, { p:'webinar.cost', l:'Cost per webinar', k:'money', tag:'i' }, { p:'webinar.inYear', l:'Realization adjustment', k:'pct', u:'%', tag:'p' }, { p:'webinar.conf', l:'Confidence', k:'pct', u:'%', tag:'p' } ],
+  ae: [ { p:'ae.existing', l:'Existing AEs', k:'int', tag:'p' }, { p:'ae.existingProd', l:'Outbound opps / existing AE / month', k:'num', tag:'i' }, { p:'ae.hires', l:'New AE hires', k:'int', tag:'p' },
+        { p:'ae.hireMo', l:'Hire month', k:'mo', tag:'p' }, { p:'ae.oppsPer', l:'Opps / fully ramped new AE / month', k:'num', tag:'i' }, { p:'ae.win', l:'Win rate', k:'pct', u:'%', tag:'p' },
+        { p:'ae.deal', l:'Average deal size (blended)', k:'money', tag:'i' }, { p:'ae.cycle', l:'Sales cycle', k:'int', u:'mo', tag:'p' }, { p:'ae.impl', l:'Implementation delay', k:'int', u:'mo', tag:'p' },
+        { p:'ae.attrition', l:'Annual attrition', k:'pct', u:'%', tag:'p' }, { p:'ae.variability', l:'Productivity variability', k:'pctneg', u:'%', tag:'p', tip:'Applied to opportunity generation for all AEs. Negative reduces productivity.' },
+        { p:'ae.inYear', l:'Realization adjustment', k:'pct', u:'%', tag:'p' }, { p:'conf.aeHiring', l:'Confidence: hiring', k:'pct', u:'%', tag:'p' }, { p:'conf.aeProd', l:'Confidence: productivity', k:'pct', u:'%', tag:'p' } ],
+  ramp: [ { p:'ae.ramp.0', l:'Ramp month 1', k:'pct', u:'%', tag:'i' }, { p:'ae.ramp.1', l:'Ramp month 2', k:'pct', u:'%', tag:'i' }, { p:'ae.ramp.2', l:'Ramp month 3', k:'pct', u:'%', tag:'i' }, { p:'ae.ramp.3', l:'Ramp month 4', k:'pct', u:'%', tag:'i' }, { p:'ae.ramp.4', l:'Ramp month 5+', k:'pct', u:'%', tag:'i' } ],
+  sam: [ { p:'sam.enabled', l:'SAM model', k:'bool', tag:'p' }, { p:'sam.count', l:'Number of SAMs', k:'int', tag:'p' }, { p:'sam.startMo', l:'Start month', k:'mo', tag:'p' }, { p:'sam.rampMo', l:'Ramp', k:'int', u:'mo', tag:'p' },
+         { p:'sam.accountsPer', l:'Accounts per SAM', k:'int', tag:'i' }, { p:'sam.eligible', l:'Eligible expansion accounts', k:'int', tag:'i' }, { p:'sam.oppRate', l:'Expansion opportunity rate', k:'pct', u:'%', tag:'p' },
+         { p:'sam.oppValue', l:'Expansion opportunity value', k:'money', tag:'i' }, { p:'sam.win', l:'Expansion win rate', k:'pct', u:'%', tag:'p' }, { p:'sam.cycle', l:'Sales cycle', k:'int', u:'mo', tag:'p' },
+         { p:'sam.impl', l:'Implementation delay', k:'int', u:'mo', tag:'p' }, { p:'sam.inYear', l:'Realization adjustment', k:'pct', u:'%', tag:'p' }, { p:'conf.sam', l:'Confidence', k:'pct', u:'%', tag:'p' } ],
+  installed: [ { p:'installed.enabled', l:'Installed-base model', k:'bool', tag:'p' }, { p:'installed.customers', l:'Existing customers', k:'int', tag:'i' }, { p:'installed.eligiblePct', l:'Expansion-eligible', k:'pct', u:'%', tag:'p' },
+         { p:'installed.oppPct', l:'Expansion opportunity rate', k:'pct', u:'%', tag:'p' }, { p:'installed.avgValue', l:'Average expansion value', k:'money', tag:'i' }, { p:'installed.win', l:'Expansion win rate', k:'pct', u:'%', tag:'p' },
+         { p:'installed.closeMo', l:'Average time to close', k:'int', u:'mo', tag:'p' }, { p:'installed.inYear', l:'Realization adjustment', k:'pct', u:'%', tag:'p' }, { p:'conf.installed', l:'Confidence', k:'pct', u:'%', tag:'p' } ],
+  conf: [ { p:'conf.recognized', l:'Recognized revenue', k:'pct', u:'%', tag:'p' }, { p:'conf.contracted', l:'Contracted (non-member)', k:'pct', u:'%', tag:'p' }, { p:'conf.programs', l:'New programs', k:'pct', u:'%', tag:'p' },
+          { p:'conf.platform', l:'Platform capabilities', k:'pct', u:'%', tag:'p' }, { p:'conf.levers', l:'User-defined levers', k:'pct', u:'%', tag:'p' } ]
+};
+
+/* ---------- table specs ---------- */
+var SEGOPTS = function(){ return S.segments.map(function(g){ return [g.id, g.name]; }); };
+function cell(p, k, opts){
+  var v = getP(S, p);
+  if (k === 'sel') return '<select data-p="'+p+'" data-k="sel">'+opts.map(function(o){ return '<option value="'+o[0]+'"'+(String(o[0])===String(v)?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>';
+  if (k === 'mo') return '<select data-p="'+p+'" data-k="mo">'+MONTHS.map(function(m,i){ return '<option value="'+(i+1)+'"'+(v===i+1?' selected':'')+'>'+m+'</option>'; }).join('')+'</select>';
+  if (k === 'q') return '<select data-p="'+p+'" data-k="q">'+[1,2,3,4].map(function(q){ return '<option value="'+q+'"'+(v===q?' selected':'')+'>Q'+q+'</option>'; }).join('')+'</select>';
+  if (k === 'text') return '<input type="text" data-p="'+p+'" data-k="text" value="'+esc(v)+'">';
+  if (k === 'bool') return '<select data-p="'+p+'" data-k="bool"><option value="1"'+(v!==false?' selected':'')+'>On</option><option value="0"'+(v===false?' selected':'')+'>Off</option></select>';
+  var step = k==='money'?1000:(k==='num'?0.1:1);
+  return '<input type="number" step="'+step+'" data-p="'+p+'" data-k="'+k+'" value="'+(k==='money'?Math.round(v):v)+'">';
+}
+function actions(arr, id){ return '<td class="act"><button class="ib" title="Duplicate" data-dup="'+arr+'" data-id="'+id+'">&#10697;</button><button class="ib del" title="Delete" data-del="'+arr+'" data-id="'+id+'">&times;</button></td>'; }
+function table(id, heads, rows, foot){
+  var el = $(id); if (!el) return;
+  el.innerHTML = '<thead><tr>'+heads.map(function(h){ return '<th>'+h+'</th>'; }).join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody>'+(foot?'<tfoot>'+foot+'</tfoot>':'');
+}
+var C = function(key, cls){ return '<td class="c '+(cls||'')+'" data-calc="'+key+'">—</td>'; };
+
+function renderTables(){
+  /* segments */
+  table('t-segments', ['Segment','Recognized 2026','Contracted (non-member)','Contracted in-year %','Open opps','Avg deal','Win %','Cycle (mo)','Close qtr','Impl (mo)','Realization adj %','Confidence %','Pipeline (in-year)','Projected total',''],
+    S.segments.map(function(g,i){ var b='segments.'+i+'.'; return '<tr>'+
+      '<td>'+cell(b+'name','text')+'</td><td>'+cell(b+'recognized','money')+'</td><td>'+cell(b+'contracted','money')+'</td><td>'+cell(b+'contractedInYear','pct')+'</td>'+
+      '<td>'+cell(b+'opps','int')+'</td><td>'+cell(b+'deal','money')+(g.id==='s1'||g.id==='s2'?' <span class="tag k" style="position:static">Known</span>':'')+'</td><td>'+cell(b+'win','pct')+'</td><td>'+cell(b+'cycle','int')+'</td><td>'+cell(b+'closeQ','q')+'</td><td>'+cell(b+'impl','int')+'</td><td>'+cell(b+'inYear','pct')+'</td><td>'+cell(b+'conf','pct')+'</td>'+
+      C('seg.'+g.id+'.pipeline')+C('seg.'+g.id+'.total')+actions('segments',g.id)+'</tr>'; }),
+    '<tr><td>Totals</td><td data-calc="seg.tot.recognized">—</td><td data-calc="seg.tot.contracted">—</td><td></td><td data-calc="seg.tot.opps">—</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td data-calc="seg.tot.pipeline">—</td><td data-calc="seg.tot.total">—</td><td></td></tr>');
+  /* member programs */
+  table('t-programs', ['Program','Customer','Segment','Status','Start','Expected members','Rev / member (annual)','File due','File status','Actual members','Exec prob %','Realization adj %','Confidence %','Remaining mo','Expected rev','Reconciled rev','Member var','True-up','In-year 2026',''],
+    S.programs.map(function(p,i){ var b='programs.'+i+'.'; return '<tr>'+
+      '<td>'+cell(b+'name','text')+'</td><td>'+cell(b+'customer','text')+'</td><td>'+cell(b+'segment','sel',SEGOPTS())+'</td><td>'+cell(b+'status','sel',[['Contracted','Contracted'],['Pending signature','Pending signature']])+'</td>'+
+      '<td>'+cell(b+'startMo','mo')+'</td><td>'+cell(b+'expMembers','int')+'</td><td>'+cell(b+'rpm','num')+'</td><td>'+cell(b+'fileMo','mo')+'</td>'+
+      '<td>'+cell(b+'fileStatus','sel',[['Not Received','Not Received'],['Received','Received'],['Reconciled','Reconciled']])+'</td><td>'+cell(b+'actualMembers','int')+'</td>'+
+      '<td>'+cell(b+'execProb','pct')+'</td><td>'+cell(b+'inYear','pct')+'</td><td>'+cell(b+'conf','pct')+'</td>'+
+      C('mem.'+p.id+'.remaining')+C('mem.'+p.id+'.expectedRev')+C('mem.'+p.id+'.reconciledRev')+C('mem.'+p.id+'.memberVar')+C('mem.'+p.id+'.trueUp')+C('mem.'+p.id+'.inYear')+actions('programs',p.id)+'</tr>'; }),
+    '<tr><td>Totals</td>'+'<td></td>'.repeat(13)+'<td data-calc="mem.tot.expected">—</td><td></td><td></td><td data-calc="mem.tot.trueUp">—</td><td data-calc="mem.tot.inYear">—</td><td></td></tr>');
+  /* funnels */
+  table('t-funnels', ['Funnel','Segment','MQL input','Leads','Lead → MQL %','MQLs','MQL → SQL %','SQL → Opp %','Opp → Won %','Avg deal','Cycle (mo)','Impl (mo)','Realization adj %','Confidence %','SQLs','Opps','Expected wins','Gross pipeline','Weighted pipeline','In-year 2026',''],
+    S.funnels.map(function(f,i){ var b='funnels.'+i+'.'; return '<tr>'+
+      '<td>'+cell(b+'name','text')+'</td><td>'+cell(b+'segment','sel',SEGOPTS())+'</td><td>'+cell(b+'mode','sel',[['mql','Enter MQLs'],['leads','From leads']])+'</td><td>'+cell(b+'leads','int')+'</td><td>'+cell(b+'l2m','pct')+'</td><td>'+cell(b+'mqls','int')+'</td>'+
+      '<td>'+cell(b+'m2s','pct')+'</td><td>'+cell(b+'s2o','pct')+'</td><td>'+cell(b+'o2w','pct')+'</td><td>'+cell(b+'deal','money')+'</td><td>'+cell(b+'cycle','int')+'</td><td>'+cell(b+'impl','int')+'</td><td>'+cell(b+'inYear','pct')+'</td><td>'+cell(b+'conf','pct')+'</td>'+
+      C('fun.'+f.id+'.sql')+C('fun.'+f.id+'.opps')+C('fun.'+f.id+'.wins')+C('fun.'+f.id+'.gross')+C('fun.'+f.id+'.weighted')+C('fun.'+f.id+'.inYear')+actions('funnels',f.id)+'</tr>'; }),
+    '<tr><td>Totals</td>'+'<td></td>'.repeat(13)+'<td></td><td data-calc="fun.tot.opps">—</td><td data-calc="fun.tot.wins">—</td><td data-calc="fun.tot.gross">—</td><td data-calc="fun.tot.weighted">—</td><td data-calc="fun.tot.inYear">—</td><td></td></tr>');
+  /* required */
+  table('t-required', ['Motion','Revenue required (in-year)','Per-win in-year value','Required wins','Required opportunities','Required SQLs','Required MQLs','Required leads'],
+    S.funnels.map(function(f,i){ var b='funnels.'+i+'.'; return '<tr><td>'+esc(f.name)+'</td><td>'+cell(b+'required','money')+'</td>'+C('req.'+f.id+'.perWin')+C('req.'+f.id+'.wins')+C('req.'+f.id+'.opps')+C('req.'+f.id+'.sqls')+C('req.'+f.id+'.mqls')+C('req.'+f.id+'.leads')+'</tr>'; }));
+  /* channels */
+  table('t-channels', ['Channel','Spend','MQLs','SQLs','Opportunities','Gross pipeline','Expected in-year revenue','Cost per opportunity','Pipeline per $','Revenue per $','Confidence'],
+    ['tradeshow','webinar','ae','levers'].map(function(k){ var n={tradeshow:'Trade shows',webinar:'Webinars',ae:'Outbound (AE model)',levers:'User-defined levers'}[k]; return '<tr><td>'+n+'</td>'+C('ch.'+k+'.spend')+C('ch.'+k+'.mqls')+C('ch.'+k+'.sqls')+C('ch.'+k+'.opps')+C('ch.'+k+'.gross')+C('ch.'+k+'.rev')+C('ch.'+k+'.cpo')+C('ch.'+k+'.ppd')+C('ch.'+k+'.rpd')+C('ch.'+k+'.conf')+'</tr>'; }));
+  /* new programs */
+  table('t-newprograms', ['Program','Launch qtr','Segment','Addressable customers','Adoption %','Members per customer','Rev / member','Exec prob %','Adoption conf %','Impl (mo)','Realization adj %','Confidence %','Gross opportunity','Expected customers','Expected members','Expected bookings','In-year 2026','Conf-weighted',''],
+    S.newPrograms.map(function(n,i){ var b='newPrograms.'+i+'.'; return '<tr><td>'+cell(b+'name','text')+'</td><td>'+cell(b+'launchQ','q')+'</td><td>'+cell(b+'segment','sel',SEGOPTS())+'</td><td>'+cell(b+'addressable','int')+'</td><td>'+cell(b+'adoption','pct')+'</td><td>'+cell(b+'members','int')+'</td><td>'+cell(b+'rpm','num')+'</td><td>'+cell(b+'execProb','pct')+'</td><td>'+cell(b+'adoptConf','pct')+'</td><td>'+cell(b+'impl','int')+'</td><td>'+cell(b+'inYear','pct')+'</td><td>'+cell(b+'conf','pct')+'</td>'+
+      C('np.'+n.id+'.grossOpp')+C('np.'+n.id+'.customers')+C('np.'+n.id+'.members')+C('np.'+n.id+'.bookings')+C('np.'+n.id+'.rev')+C('np.'+n.id+'.weighted')+actions('newPrograms',n.id)+'</tr>'; }),
+    '<tr><td>Totals</td>'+'<td></td>'.repeat(15)+'<td data-calc="np.tot.rev">—</td><td data-calc="np.tot.weighted">—</td><td></td></tr>');
+  /* platform */
+  table('t-platform', ['Capability','Launch qtr','Installed-base accounts','New-logo accounts','Adoption %','Attach % (base)','Avg incremental revenue','Cycle (mo)','Impl (mo)','Realization adj %','Confidence %','Adopting accounts','Incremental bookings','In-year 2026','Conf-weighted',''],
+    S.platform.map(function(c,i){ var b='platform.'+i+'.'; return '<tr><td>'+cell(b+'name','text')+'</td><td>'+cell(b+'launchQ','q')+'</td><td>'+cell(b+'base','int')+'</td><td>'+cell(b+'newLogo','int')+'</td><td>'+cell(b+'adoption','pct')+'</td><td>'+cell(b+'attach','pct')+'</td><td>'+cell(b+'avgRev','money')+'</td><td>'+cell(b+'cycle','int')+'</td><td>'+cell(b+'impl','int')+'</td><td>'+cell(b+'inYear','pct')+'</td><td>'+cell(b+'conf','pct')+'</td>'+
+      C('pl.'+c.id+'.accounts')+C('pl.'+c.id+'.bookings')+C('pl.'+c.id+'.rev')+C('pl.'+c.id+'.weighted')+actions('platform',c.id)+'</tr>'; }),
+    '<tr><td>Totals</td>'+'<td></td>'.repeat(12)+'<td data-calc="pl.tot.rev">—</td><td data-calc="pl.tot.weighted">—</td><td></td></tr>');
+  /* levers */
+  table('t-levers', ['Lever','Category','Enabled','Annualized contribution','Timing (qtr)','Confidence %','Downside','Base','Upside','Notes','In-year 2026','Conf-weighted',''],
+    S.levers.map(function(l,i){ var b='levers.'+i+'.'; return '<tr><td>'+cell(b+'name','text')+'</td><td>'+cell(b+'cat','text')+'</td><td>'+cell(b+'enabled','bool')+'</td><td>'+cell(b+'rev','money')+'</td><td>'+cell(b+'timingQ','q')+'</td><td>'+cell(b+'conf','pct')+'</td><td>'+cell(b+'down','money')+'</td><td>'+cell(b+'base','money')+'</td><td>'+cell(b+'up','money')+'</td><td>'+cell(b+'notes','text')+'</td>'+
+      C('lv.'+l.id+'.rev')+C('lv.'+l.id+'.weighted')+actions('levers',l.id)+'</tr>'; }));
+  /* confidence table */
+  table('t-conf', ['Revenue motion','Confidence','Certainty category','Unweighted (modeled)','Confidence-weighted','Haircut'],
+    ['recognized','contracted','member','pipeline','funnels','fqhc','tradeshow','webinar','programs','platform','ae','sam','installed','levers'].map(function(k){ return '<tr><td data-calc="cf.'+k+'.label">—</td>'+C('cf.'+k+'.conf')+'<td data-calc="cf.'+k+'.cert">—</td>'+C('cf.'+k+'.gross')+C('cf.'+k+'.weighted')+C('cf.'+k+'.hair','neg')+'</tr>'; }),
+    '<tr><td>Total</td><td></td><td></td><td data-calc="cf.tot.gross">—</td><td data-calc="cf.tot.weighted">—</td><td data-calc="cf.tot.hair">—</td></tr>');
+  /* compare */
+  table('t-compare', ['Metric','Conservative','Base','Upside','Custom'],
+    ['Projected revenue','Confidence-weighted','Gap to target','Growth vs 2025','Target coverage','Weighted coverage','Gross pipeline required (2.5×)','Expected new-logo wins','Effective AE capacity (FTE)','Marketing contribution','Expansion contribution','Product / program contribution','Member-volume dependent revenue','Q4 share'].map(function(m,i){ return '<tr><td>'+m+'</td>'+C('cmp.conservative.'+i)+C('cmp.base.'+i)+C('cmp.upside.'+i)+C('cmp.custom.'+i)+'</tr>'; }));
+  renderRegister();
+  renderToggles();
+}
+
+/* ---------- assumption register ---------- */
+var REG = [
+  ['target','2026 revenue target','Target','Known historical value','Board planning target'],
+  ['baseline','2025 projected revenue','Target','Known historical value','Finance-reconciled at planning time'],
+  ['segments.0.deal','Payer average deal size','Segments','Known historical value','~$300K; editable for scenarios'],
+  ['segments.1.deal','Provider average deal size','Segments','Known historical value','~$125K; editable for scenarios'],
+  ['segments.0.recognized','Payer recognized / recurring 2026','Segments','Illustrative portfolio assumption',''],
+  ['segments.1.recognized','Provider recognized / recurring 2026','Segments','Illustrative portfolio assumption',''],
+  ['segments.0.win','Payer pipeline win rate','Segments','Planning assumption',''],
+  ['segments.1.win','Provider pipeline win rate','Segments','Planning assumption',''],
+  ['memberVar.down','Member downside variance','Member programs','Planning assumption','Applies to unconfirmed programs'],
+  ['memberVar.up','Member upside variance','Member programs','Planning assumption',''],
+  ['funnels.0.mqls','Payer MQLs (baseline)','Funnels','Planning assumption',''],
+  ['funnels.1.mqls','Provider MQLs (baseline)','Funnels','Planning assumption',''],
+  ['funnels.0.o2w','Payer funnel win rate','Funnels','Planning assumption',''],
+  ['funnels.1.o2w','Provider funnel win rate','Funnels','Planning assumption',''],
+  ['fqhc.targeted','FQHC accounts targeted','FQHC','Planning assumption',''],
+  ['fqhc.deal','FQHC average deal size','FQHC','Illustrative portfolio assumption',''],
+  ['tradeshow.shows','Trade shows planned','Marketing','Planning assumption',''],
+  ['tradeshow.leads','Leads per trade show','Marketing','Illustrative portfolio assumption','Original work used historical attribution'],
+  ['webinar.count','Webinars planned','Marketing','Planning assumption',''],
+  ['ae.hires','New AE hires','Capacity','Planning assumption',''],
+  ['ae.hireMo','AE hire month','Capacity','Planning assumption','Month number'],
+  ['ae.oppsPer','Opportunities per ramped AE per month','Capacity','Illustrative portfolio assumption',''],
+  ['ae.cycle','Outbound sales cycle (months)','Capacity','Planning assumption',''],
+  ['sam.count','Strategic Account Managers','Expansion','Planning assumption',''],
+  ['installed.customers','Existing customers','Expansion','Illustrative portfolio assumption',''],
+  ['conf.recognized','Confidence: recognized','Confidence','Planning assumption',''],
+  ['conf.contracted','Confidence: contracted','Confidence','Planning assumption',''],
+  ['conf.programs','Confidence: new programs','Confidence','Planning assumption',''],
+  ['conf.platform','Confidence: platform','Confidence','Planning assumption',''],
+  ['conf.sam','Confidence: SAM expansion','Confidence','Planning assumption',''],
+  ['weights.coverage','Plan score weight: coverage','Scoring','Illustrative portfolio assumption','Not a historical methodology']
+];
+function kindFor(p){ if (/deal|recognized|contracted$|target|baseline|avgRev|oppValue|avgValue|cost|rev$/.test(p)) return 'money'; if (/Var\./.test(p)) return 'pctneg'; if (/win|o2w|m2s|s2o|conf|weights|mql|reach|engage|attend|adoption|attach|eligiblePct|oppPct|oppRate|inYear|Prob/.test(p)) return 'pct'; if (/oppsPer|existingProd|rpm/.test(p)) return 'num'; if (/hireMo|startMo|fileMo/.test(p)) return 'mo'; return 'int'; }
+function renderRegister(){
+  var q = ($('reg-q')||{}).value || '', src = ($('reg-src')||{}).value || '';
+  var rows = REG.filter(function(r){ return (!q || (r[1]+' '+r[2]).toLowerCase().indexOf(q.toLowerCase())>-1) && (!src || r[3]===src); })
+    .map(function(r){ var k = kindFor(r[0]); return '<tr><td>'+r[1]+'</td><td>'+cell(r[0],k)+'</td><td>'+r[2]+'</td><td><span class="tag '+({ 'Known historical value':'k','Planning assumption':'p','Illustrative portfolio assumption':'i','Current operating assumption':'o' }[r[3]])+'" style="position:static">'+r[3]+'</span></td><td style="white-space:normal;color:var(--muted);font-size:12px">'+r[4]+'</td></tr>'; });
+  table('t-register', ['Assumption','Current value','Category','Source type','Notes'], rows);
+}
+function renderToggles(){
+  var labels = { recognized:'Existing recognized', contracted:'Contracted (non-member)', member:'Member programs', pipeline:'Existing pipeline', funnels:'Baseline funnels', fqhc:'FQHC expansion', tradeshow:'Trade shows', webinar:'Webinars', programs:'New programs', platform:'Platform capabilities', ae:'Outbound AE', sam:'SAM expansion', installed:'Installed base', levers:'User levers' };
+  $('toggles').innerHTML = Object.keys(labels).map(function(k){ return '<label class="toggle"><input type="checkbox" data-toggle="'+k+'"'+(S.toggles[k]?' checked':'')+'> '+labels[k]+'</label>'; }).join('');
+  var tl = { aeDelay:'+1 month AE hiring delay', cycleDelay:'+1 month sales cycle', implDelay:'+1 month implementation delay', productDelayQ:'+1 quarter product / program delay', fileDelay:'+1 month member-file delay', programDelay:'+1 month program start delay' };
+  $('timing-toggles').innerHTML = Object.keys(tl).map(function(k){ return '<label class="toggle"><input type="checkbox" data-timing="'+k+'"'+(S.timing[k]>0?' checked':'')+'> '+tl[k]+'</label>'; }).join('');
+}
+
+/* ---------- SVG charts ---------- */
+var PAL = { recognized:'#111B33', contracted:'#2A5FA8', member:'#7A98CB', pipeline:'#12856A', funnels:'#1FB891', fqhc:'#7DCDB6', tradeshow:'#8A6212', webinar:'#B98C3A', programs:'#5B4C8F', platform:'#8F84B8', ae:'#56637E', sam:'#8A94AB', installed:'#B4BCCB', levers:'#CFC7A8' };
+function svgOpen(w,h){ return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" role="img">'; }
+function waterfall(el, R){
+  var steps = [], run = 0;
+  R.sources.forEach(function(s){ if (s.gross > 0){ steps.push({ label: s.label, v: s.gross, from: run, key: s.key }); run += s.gross; } });
+  var W = 960, H = 340, L = 60, Rt = 20, T = 18, B = 96, ih = H - T - B, iw = W - L - Rt;
+  var maxV = Math.max(run, R.target, R.baseline) * 1.06, y = function(v){ return T + ih - ih * v / maxV; };
+  var n = steps.length + 1, bw = iw / n * 0.62, gap = iw / n;
+  var s = svgOpen(W,H);
+  [0.25,0.5,0.75,1].forEach(function(f){ var v = maxV*f; s += '<line class="svg-ax" x1="'+L+'" x2="'+(W-Rt)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke-dasharray="2 3"/><text class="svg-lab" x="'+(L-6)+'" y="'+(y(v)+3)+'" text-anchor="end">'+fmtMoney(v)+'</text>'; });
+  steps.forEach(function(st,i){ var x = L + gap*i + (gap-bw)/2, top = y(st.from+st.v), h = Math.max(1, y(st.from)-top);
+    s += '<rect x="'+x+'" y="'+top+'" width="'+bw+'" height="'+h+'" fill="'+(PAL[st.key]||'#999')+'"/>';
+    s += '<text class="svg-val" x="'+(x+bw/2)+'" y="'+(top-4)+'" text-anchor="middle">'+fmtMoney(st.v)+'</text>';
+    var lab = st.label.length > 18 ? st.label.slice(0,17)+'…' : st.label;
+    s += '<text class="svg-lab" transform="translate('+(x+bw/2)+','+(T+ih+10)+') rotate(38)" text-anchor="start">'+esc(lab)+'</text>';
+    if (i < steps.length-1) s += '<line x1="'+(x+bw)+'" x2="'+(x+gap)+'" y1="'+top+'" y2="'+top+'" stroke="#B8C0CC" stroke-dasharray="2 2"/>'; });
+  var xf = L + gap*(n-1) + (gap-bw)/2, topf = y(run);
+  s += '<rect x="'+xf+'" y="'+topf+'" width="'+bw+'" height="'+(T+ih-topf)+'" fill="#111B33"/><text class="svg-val" x="'+(xf+bw/2)+'" y="'+(topf-4)+'" text-anchor="middle">'+fmtMoney(run)+'</text>';
+  s += '<text class="svg-lab" transform="translate('+(xf+bw/2)+','+(T+ih+10)+') rotate(38)">Projected 2026</text>';
+  s += '<line x1="'+L+'" x2="'+(W-Rt)+'" y1="'+y(R.target)+'" y2="'+y(R.target)+'" stroke="#A63D22" stroke-width="1.5" stroke-dasharray="6 4"/><text class="svg-lab" x="'+(W-Rt)+'" y="'+(y(R.target)-4)+'" text-anchor="end" fill="#A63D22">Target '+fmtMoney(R.target)+'</text>';
+  s += '<line x1="'+L+'" x2="'+(W-Rt)+'" y1="'+y(R.baseline)+'" y2="'+y(R.baseline)+'" stroke="#8A94AB" stroke-width="1.2" stroke-dasharray="3 3"/><text class="svg-lab" x="'+(W-Rt)+'" y="'+(y(R.baseline)-4)+'" text-anchor="end">2025 baseline '+fmtMoney(R.baseline)+'</text>';
+  el.innerHTML = s + '</svg>';
+}
+function hbars(el, items, total){
+  var W = 560, rowH = 26, H = items.length*rowH + 6, L = 190, iw = W - L - 70, mx = Math.max.apply(null, items.map(function(i){ return i.v; }).concat([1]));
+  var s = svgOpen(W,H);
+  items.forEach(function(it,i){ var yy = i*rowH+4, w = iw*it.v/mx;
+    s += '<text class="svg-lab" x="'+(L-8)+'" y="'+(yy+14)+'" text-anchor="end">'+esc(it.l)+'</text><rect x="'+L+'" y="'+yy+'" width="'+Math.max(1,w)+'" height="18" fill="'+it.c+'"/>';
+    s += '<text class="svg-val" x="'+(L+w+6)+'" y="'+(yy+13)+'">'+fmtMoney(it.v)+(total?' · '+Math.round(100*it.v/total)+'%':'')+'</text>'; });
+  el.innerHTML = s + '</svg>';
+}
+function columns(el, labels, series){ /* series: [{name,vals,c,line?}] */
+  var W = 960, H = 260, L = 56, Rt = 16, T = 14, B = 30, ih = H-T-B, iw = W-L-Rt, n = labels.length;
+  var mx = Math.max.apply(null, series.map(function(sr){ return Math.max.apply(null, sr.vals); }).concat([1]))*1.1, y = function(v){ return T + ih - ih*v/mx; };
+  var s = svgOpen(W,H); [0.25,0.5,0.75,1].forEach(function(f){ s += '<line class="svg-ax" x1="'+L+'" x2="'+(W-Rt)+'" y1="'+y(mx*f)+'" y2="'+y(mx*f)+'" stroke-dasharray="2 3"/><text class="svg-lab" x="'+(L-6)+'" y="'+(y(mx*f)+3)+'" text-anchor="end">'+fmtMoney(mx*f)+'</text>'; });
+  var gap = iw/n, bars = series.filter(function(x){ return !x.line; }), bw = gap*0.6/Math.max(1,bars.length);
+  labels.forEach(function(lb,i){ s += '<text class="svg-lab" x="'+(L+gap*i+gap/2)+'" y="'+(H-10)+'" text-anchor="middle">'+lb+'</text>';
+    bars.forEach(function(sr,j){ var x = L+gap*i+gap*0.2+bw*j, top = y(sr.vals[i]); s += '<rect x="'+x+'" y="'+top+'" width="'+(bw-2)+'" height="'+(T+ih-top)+'" fill="'+sr.c+'"/>'; }); });
+  series.filter(function(x){ return x.line; }).forEach(function(sr){ var d = sr.vals.map(function(v,i){ return (i?'L':'M')+(L+gap*i+gap/2)+' '+y(v); }).join(' '); s += '<path d="'+d+'" fill="none" stroke="'+sr.c+'" stroke-width="2" stroke-dasharray="'+(sr.dash||'0')+'"/>'; sr.vals.forEach(function(v,i){ s += '<circle cx="'+(L+gap*i+gap/2)+'" cy="'+y(v)+'" r="2.6" fill="'+sr.c+'"/>'; }); });
+  el.innerHTML = s + '</svg>';
+}
+function aeChart(el, ae){
+  var W = 960, H = 220, L = 40, Rt = 16, T = 14, B = 30, ih = H-T-B, iw = W-L-Rt, mx = Math.max.apply(null, ae.headcount.concat([1]))*1.15, y = function(v){ return T+ih-ih*v/mx; }, gap = iw/12;
+  var s = svgOpen(W,H);
+  [0.5,1].forEach(function(f){ s += '<line class="svg-ax" x1="'+L+'" x2="'+(W-Rt)+'" y1="'+y(mx*f)+'" y2="'+y(mx*f)+'" stroke-dasharray="2 3"/><text class="svg-lab" x="'+(L-6)+'" y="'+(y(mx*f)+3)+'" text-anchor="end">'+(mx*f).toFixed(1)+'</text>'; });
+  for (var m=0;m<12;m++){ var x = L+gap*m+gap*0.2, w = gap*0.6; s += '<rect x="'+x+'" y="'+y(ae.headcount[m])+'" width="'+w+'" height="'+(T+ih-y(ae.headcount[m]))+'" fill="#DFE4EC"/><rect x="'+x+'" y="'+y(ae.effective[m])+'" width="'+w+'" height="'+(T+ih-y(ae.effective[m]))+'" fill="#12856A"/><text class="svg-lab" x="'+(L+gap*m+gap/2)+'" y="'+(H-10)+'" text-anchor="middle">'+MONTHS[m]+'</text>'; }
+  el.innerHTML = s + '</svg><div class="legend"><span style="--c:#DFE4EC">Nominal headcount</span><span style="--c:#12856A">Effective productive capacity</span></div>';
+}
+
+/* ---------- scenarios ---------- */
+var PRESETS = {
+  conservative: function(c){
+    c.segments.forEach(function(g){ g.win = Math.max(0,g.win-5); g.contractedInYear = Math.max(0,g.contractedInYear-10); });
+    c.funnels.forEach(function(f){ f.mqls = Math.round(f.mqls*0.85); f.leads = Math.round(f.leads*0.85); f.m2s -= 5; f.s2o -= 5; f.o2w -= 5; f.cycle += 1; f.conf -= 10; });
+    c.memberVar.active = 'down'; c.programs.forEach(function(p){ if (p.fileStatus==='Not Received') p.execProb = Math.max(0,p.execProb-15); });
+    c.ae.hireMo = Math.min(12,c.ae.hireMo+2); c.ae.oppsPer *= 0.8; c.ae.existingProd *= 0.9; c.ae.cycle += 1;
+    c.newPrograms.forEach(function(n){ n.launchQ = Math.min(4,n.launchQ+1); n.adoption *= 0.75; n.execProb -= 15; });
+    c.platform.forEach(function(p){ p.launchQ = Math.min(4,p.launchQ+1); p.adoption *= 0.75; });
+    c.fqhc.win -= 5; c.tradeshow.win -= 5; c.webinar.win -= 5; c.sam.win -= 10; c.installed.win -= 10;
+    Object.keys(c.conf).forEach(function(k){ c.conf[k] = Math.max(0,c.conf[k]-15); });
+  },
+  upside: function(c){
+    c.segments.forEach(function(g){ g.win = Math.min(100,g.win+5); g.contractedInYear = Math.min(100,g.contractedInYear+10); });
+    c.funnels.forEach(function(f){ f.mqls = Math.round(f.mqls*1.15); f.leads = Math.round(f.leads*1.15); f.m2s += 3; f.s2o += 3; f.o2w += 3; f.cycle = Math.max(1,f.cycle-1); f.conf += 10; });
+    c.memberVar.active = 'up'; c.programs.forEach(function(p){ if (p.fileStatus==='Not Received') p.execProb = Math.min(100,p.execProb+10); });
+    c.ae.hireMo = Math.max(1,c.ae.hireMo-1); c.ae.oppsPer *= 1.15; c.ae.existingProd *= 1.1;
+    c.newPrograms.forEach(function(n){ n.adoption *= 1.25; n.execProb = Math.min(100,n.execProb+10); });
+    c.platform.forEach(function(p){ p.adoption *= 1.25; });
+    c.fqhc.win += 5; c.tradeshow.win += 5; c.webinar.win += 5; c.sam.win += 5; c.installed.win += 5; c.sam.count += 1;
+    Object.keys(c.conf).forEach(function(k){ c.conf[k] = Math.min(100,c.conf[k]+10); });
+  }
+};
+function scenarioState(name){ var c = clone(BASE); if (PRESETS[name]) PRESETS[name](c); c.scenario = name; if (name==='custom' && customStash) return customStash; return c; }
+function flat(o, pfx, out){ out = out||{}; Object.keys(o).forEach(function(k){ var v = o[k], p = pfx?pfx+'.'+k:k; if (v && typeof v==='object' && !Array.isArray(v)) flat(v,p,out); else if (Array.isArray(v)) v.forEach(function(x,i){ if (x && typeof x==='object') flat(x,p+'.'+i,out); else out[p+'.'+i]=x; }); else out[p]=v; }); return out; }
+function renderDiff(){
+  var a = flat(BASE), b = flat(S), lines = [];
+  Object.keys(b).forEach(function(k){ if (/^(scenario|view|period|toggles|timing)/.test(k)) return; if (a[k] !== undefined && String(a[k]) !== String(b[k])) lines.push('<b>'+k+'</b>: '+a[k]+' → '+b[k]); });
+  var extra = Object.keys(b).filter(function(k){ return a[k]===undefined; }).length;
+  $('scen-diff').innerHTML = lines.length ? lines.slice(0,60).join('<br>') + (lines.length>60?'<br>… +'+(lines.length-60)+' more':'') + (extra?'<br>+'+extra+' added rows/fields':'') : 'No assumptions differ from Base.';
+}
+function setScenario(name, keepEdits){
+  if (S.scenario === 'custom' && name !== 'custom') customStash = clone(S);
+  var view = S.view, period = S.period, tog = clone(S.toggles), tim = clone(S.timing), target = S.target;
+  S = scenarioState(name); S.view = view; S.period = period; S.toggles = tog; S.timing = tim; if (keepEdits) S.target = target;
+  document.querySelectorAll('#scenseg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-s')===name); });
+  $('scen-name').textContent = name.charAt(0).toUpperCase()+name.slice(1);
+  renderAll();
+}
+function markCustom(){ if (S.scenario !== 'custom'){ S.scenario = 'custom'; document.querySelectorAll('#scenseg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-s')==='custom'); }); $('scen-name').textContent = 'Custom'; } }
+
+/* ---------- storage ---------- */
+var KEY = 'rp-revenue-model-v1';
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); flash('Saved'); } catch(e){ flash('Browser storage unavailable'); } }
+function autosave(){ clearTimeout(saveTimer); saveTimer = setTimeout(function(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }, 600); }
+function load(){ try { var raw = localStorage.getItem(KEY); if (raw){ var o = JSON.parse(raw); if (o && o.segments){ S = o; if (!S.toggles) S.toggles = clone(DEFAULTS.toggles); if (!S.timing) S.timing = clone(DEFAULTS.timing); if (S.scenario==='custom') customStash = clone(S); return true; } } } catch(e){} return false; }
+function flash(t){ var m = $('msg'); m.textContent = t; setTimeout(function(){ if (m.textContent===t) m.textContent=''; }, 1800); }
+
+/* ---------- outputs ---------- */
+function out(id, v){ var el = $(id); if (el) el.textContent = v; }
+function setCalc(map){ document.querySelectorAll('[data-calc]').forEach(function(el){ var k = el.getAttribute('data-calc'); if (map[k] !== undefined){ var v = map[k]; el.textContent = typeof v === 'object' && v !== null ? v.t : v; if (typeof v === 'object' && v !== null){ el.classList.toggle('pos', !!v.pos); el.classList.toggle('neg', !!v.neg); } } }); }
+function cc(k){ return { 'More Certain':'c-more','Moderately Certain':'c-mod','Execution Dependent':'c-exec','Highly Assumption Dependent':'c-high' }[k]; }
+
+function renderOutputs(){
+  R = compute(S);
+  var t = R.target;
+  /* hero + scorecard */
+  out('h-target', fmtMoney(t)); out('h-target2', fmtMoney(t)); out('h-req', (R.requiredGrowth>=0?'+':'')+fmtPct(R.requiredGrowth)); out('h-reqgap', fmtMoney(R.requiredGap)+' of new revenue in twelve months');
+  out('h-proj', fmtMoney(R.projected)); out('h-weighted', fmtMoney(R.weighted)); out('h-gap', (R.gap>0?'':'+')+fmtMoney(Math.abs(R.gap))); out('h-gapsub', R.gap>0 ? 'Target minus model projection · '+fmtMoney(R.wGap)+' on a confidence-weighted basis' : 'Model projection exceeds target · weighted gap '+fmtMoney(R.wGap));
+  out('req-growth', (R.requiredGrowth>=0?'+':'')+fmtPct(R.requiredGrowth)); out('req-gap', fmtMoney(R.requiredGap));
+  $('scorecard').innerHTML = [
+    ['2025 baseline', fmtMoney(R.baseline), 'Known', ''], ['2026 target', fmtMoney(t), 'Board / planning', ''],
+    ['Projected 2026 revenue', fmtMoney(R.projected), 'Unweighted model total', 'acc'], ['Confidence-weighted projection', fmtMoney(R.weighted), 'Sum of source × confidence', 'teal'],
+    ['Remaining gap', fmtMoney(R.gap), R.gap>0?'Below target':'Target exceeded', R.gap>0?'amber':'teal'], ['Growth vs 2025', (R.growth>=0?'+':'')+fmtPct(R.growth), 'Required: '+(R.requiredGrowth>=0?'+':'')+fmtPct(R.requiredGrowth), ''],
+    ['Target coverage', fmtPct(R.coverage), 'Projected ÷ target', ''], ['Confidence-weighted coverage', fmtPct(R.wCoverage), 'Weighted ÷ target', '']
+  ].map(function(k){ return '<div class="kpi '+k[3]+'"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+k[2]+'</div></div>'; }).join('');
+  var st = $('status'); st.className = 'status s'+['Below Plan','Near Plan','At Plan','Above Plan'].indexOf(R.status); st.querySelector('span').textContent = R.status + ' · ' + fmtPct(R.coverage) + ' of target';
+
+  /* sticky strip */
+  out('d-proj', fmtMoney(R.projected)); out('d-gap', (R.gap>0?'-':'+')+fmtMoney(Math.abs(R.gap))); out('d-w', fmtMoney(R.weighted)); out('d-wgap', 'gap '+fmtMoney(R.wGap)); out('d-target', fmtMoney(t)); out('d-cov', fmtPct(R.coverage,0)); out('d-scen', S.scenario.charAt(0).toUpperCase()+S.scenario.slice(1));
+  var ds = $('d-status'); ds.className = 'dstat s'+['Below Plan','Near Plan','At Plan','Above Plan'].indexOf(R.status); ds.textContent = R.status;
+  $('d-gap').className = 'dv ' + (R.gap>0 ? (R.gap/t>0.1?'no':'hold') : 'ai');
+  /* board view: major assumptions */
+  var sg = S.segments, f1 = S.funnels[0]||{}, f2 = S.funnels[1]||{};
+  $('majors').innerHTML = [['2026 target',fmtMoney(t)],['2025 baseline',fmtMoney(S.baseline)],['Payer deal / win rate',fmtMoney(sg[0]?sg[0].deal:0)+' / '+(sg[0]?sg[0].win:0)+'%'],['Provider deal / win rate',fmtMoney(sg[1]?sg[1].deal:0)+' / '+(sg[1]?sg[1].win:0)+'%'],['Baseline MQLs (payer / provider)',(f1.mqls||0)+' / '+(f2.mqls||0)],['New AE hires / month',S.ae.hires+' / '+MONTHS[S.ae.hireMo-1]],['Strategic Account Managers',S.sam.enabled?S.sam.count:'Off'],['Member variance scenario',S.memberVar.active.charAt(0).toUpperCase()+S.memberVar.active.slice(1)],['Trade shows / webinars',S.tradeshow.shows+' / '+S.webinar.count],['Programs awaiting member file',S.programs.filter(function(p){ return p.fileStatus==='Not Received'; }).length+' of '+S.programs.length],['Implementation delay (payer)',(sg[0]?sg[0].impl:0)+' mo'],['Scenario',S.scenario.charAt(0).toUpperCase()+S.scenario.slice(1)]].map(function(m){ return '<div class="m"><div class="l">'+m[0]+'</div><div class="v">'+m[1]+'</div></div>'; }).join('');
+
+  /* support */
+  $('support-kpis').innerHTML = [['Projected revenue',fmtMoney(R.projected),''],['Confidence-weighted',fmtMoney(R.weighted),'teal'],['Target',fmtMoney(t),''],['Gap',fmtMoney(R.gap),R.gap>0?'amber':'teal']].map(function(k){ return '<div class="kpi '+k[2]+'"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'; }).join('');
+  var D = R.dep, deps = [
+    ['Supported by existing / contracted revenue', D.existing, 'More Certain'], ['Dependent on existing pipeline', D.pipeline, 'Moderately Certain'],
+    ['Dependent on marketing expansion', D.marketing, 'Execution Dependent'], ['Dependent on hiring / capacity', D.capacity, 'Execution Dependent'],
+    ['Dependent on product / program launches', D.product, 'Execution Dependent'], ['Dependent on new initiatives', D.initiatives, 'Highly Assumption Dependent'],
+    ['Dependent on member-volume assumptions', D.member, 'Execution Dependent'] ];
+  $('deps').innerHTML = deps.map(function(d){ return '<div class="dep"><div class="l">'+d[0]+'</div><div class="v">'+fmtPct(d[1]/t,0)+' <span style="font-size:12px;color:var(--faint);font-weight:400">'+fmtMoney(d[1])+'</span></div><div class="bar"><i style="width:'+Math.min(100,100*d[1]/t)+'%;background:var(--blue)"></i></div><div class="cert '+cc(d[2])+'" style="margin-top:6px">'+d[2]+'</div></div>'; }).join('');
+  hbars($('ch-cert'), ['More Certain','Moderately Certain','Execution Dependent','Highly Assumption Dependent'].map(function(k){ return { l:k, v:R.certMix[k]||0, c:{ 'More Certain':'#12856A','Moderately Certain':'#2A5FA8','Execution Dependent':'#8A6212','Highly Assumption Dependent':'#A63D22' }[k] }; }), R.projected);
+  out('planscore', Math.round(R.planScore)+' / 100');
+
+  /* bridge */
+  waterfall($('ch-bridge'), R);
+
+  /* segments chart + calc cells */
+  var M = {};
+  var segTot = { recognized:0, contracted:0, pipeline:0, opps:0, total:0 };
+  S.segments.forEach(function(g){ var b = R.seg.bySeg[g.id], p = R.seg.pipeline.filter(function(x){ return x.seg===g.id; })[0];
+    M['seg.'+g.id+'.pipeline'] = fmtMoney(b.pipeline); M['seg.'+g.id+'.total'] = fmtMoney(b.recognized+b.contracted+b.pipeline);
+    segTot.recognized += b.recognized; segTot.contracted += b.contracted; segTot.pipeline += b.pipeline; segTot.opps += g.opps; segTot.total += b.recognized+b.contracted+b.pipeline; });
+  M['seg.tot.recognized']=fmtMoney(segTot.recognized); M['seg.tot.contracted']=fmtMoney(segTot.contracted); M['seg.tot.pipeline']=fmtMoney(segTot.pipeline); M['seg.tot.opps']=fmtInt(segTot.opps); M['seg.tot.total']=fmtMoney(segTot.total);
+  columns($('ch-seg'), S.segments.map(function(g){ return g.name.split(' /')[0]; }), [
+    { name:'Recognized', vals:S.segments.map(function(g){ return R.seg.bySeg[g.id].recognized; }), c:PAL.recognized },
+    { name:'Contracted', vals:S.segments.map(function(g){ return R.seg.bySeg[g.id].contracted; }), c:PAL.contracted },
+    { name:'Pipeline', vals:S.segments.map(function(g){ return R.seg.bySeg[g.id].pipeline; }), c:PAL.pipeline } ]);
+  $('ch-seg').innerHTML += '<div class="legend"><span style="--c:'+PAL.recognized+'">Recognized</span><span style="--c:'+PAL.contracted+'">Contracted (in-year)</span><span style="--c:'+PAL.pipeline+'">Pipeline (in-year)</span></div>';
+
+  /* member programs */
+  var mt = { expected:0, trueUp:0 };
+  R.mem.rows.forEach(function(r){ M['mem.'+r.id+'.remaining'] = r.remaining; M['mem.'+r.id+'.expectedRev'] = fmtMoney(r.expectedRev); M['mem.'+r.id+'.reconciledRev'] = r.reconciledRev===null ? { t:'Subject to reconciliation', neg:false } : fmtMoney(r.reconciledRev);
+    M['mem.'+r.id+'.memberVar'] = r.memberVar===null ? '—' : { t:(r.memberVar>=0?'+':'')+fmtInt(r.memberVar)+' ('+fmtPct(r.memberVarPct,1)+')', pos:r.memberVar>0, neg:r.memberVar<0 };
+    M['mem.'+r.id+'.trueUp'] = r.trueUp===null ? '—' : { t:fmtSigned(r.trueUp), pos:r.trueUp>0, neg:r.trueUp<0 }; M['mem.'+r.id+'.inYear'] = fmtMoney(r.inYear);
+    mt.expected += r.expectedRev; mt.trueUp += r.trueUp||0; });
+  M['mem.tot.expected']=fmtMoney(mt.expected); M['mem.tot.trueUp']=fmtSigned(mt.trueUp); M['mem.tot.inYear']=fmtMoney(R.mem.total);
+  $('mem-kpis').innerHTML = [['Member-program revenue in 2026',fmtMoney(R.mem.total),'Ratable from program start','acc'],['Subject to member reconciliation',fmtMoney(R.mem.subject),'Programs without a member file','amber'],['Net true-up on reconciled programs',fmtSigned(mt.trueUp),'Reconciled minus expected','']
+    ,['Confidence-weighted',fmtMoney(R.mem.weighted),'Program confidence applied','teal']].map(function(k){ return '<div class="kpi '+k[3]+'"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div><div class="s">'+k[2]+'</div></div>'; }).join('');
+
+  /* member variance */
+  var mv = S.memberVar; $('memvar-chips').innerHTML = [['down','Downside '+(mv.down>0?'+':'')+mv.down+'%'],['base','Base '+(mv.base>0?'+':'')+mv.base+'%'],['up','Upside '+(mv.up>0?'+':'')+mv.up+'%']].map(function(c){ return '<button data-mv="'+c[0]+'" class="'+(mv.active===c[0]?'on':'')+'">'+c[1]+'</button>'; }).join('');
+  var mvRows = ['down','base','up'].map(function(k){ var c = clone(S); c.memberVar.active = k; var r = compute(c); return [k, r.mem.total, r.projected, r.gap]; });
+  $('memvar-kpis').innerHTML = mvRows.map(function(r){ return '<div class="kpi'+(r[0]===mv.active?' acc':'')+'"><div class="l">'+r[0].charAt(0).toUpperCase()+r[0].slice(1)+' member scenario</div><div class="v">'+fmtMoney(r[1])+'</div><div class="s">Projected '+fmtMoney(r[2])+' · gap '+fmtMoney(r[3])+'</div></div>'; }).join('') + '<div class="kpi"><div class="l">Swing, downside to upside</div><div class="v">'+fmtMoney(mvRows[2][1]-mvRows[0][1])+'</div><div class="s">In-year member revenue at risk to population variance</div></div>';
+
+  /* lifecycle */
+  renderLifecycle();
+
+  /* funnels */
+  var ft = { opps:0, wins:0, gross:0, weighted:0, inYear:0 };
+  R.fun.rows.forEach(function(r,i){ var f = S.funnels[i]; M['fun.'+r.id+'.sql']=fmtNum(r.sql,1); M['fun.'+r.id+'.opps']=fmtNum(r.opps,1); M['fun.'+r.id+'.wins']=fmtNum(r.wins,1); M['fun.'+r.id+'.gross']=fmtMoney(r.gross); M['fun.'+r.id+'.weighted']=fmtMoney(r.weighted); M['fun.'+r.id+'.inYear']=fmtMoney(r.inYear);
+    ft.opps+=r.opps; ft.wins+=r.wins; ft.gross+=r.gross; ft.weighted+=r.weighted; ft.inYear+=r.inYear;
+    var perWin = Math.max(0,f.deal)*pct(f.inYear)*r.realizedShare; M['req.'+r.id+'.perWin'] = fmtMoney(perWin);
+    if (r.req){ M['req.'+r.id+'.wins']=fmtInt(r.req.wins); M['req.'+r.id+'.opps']=fmtInt(r.req.opps); M['req.'+r.id+'.sqls']=fmtInt(r.req.sqls); M['req.'+r.id+'.mqls']=fmtInt(r.req.mqls); M['req.'+r.id+'.leads']=r.req.leads===null?'—':fmtInt(r.req.leads); }
+    else ['wins','opps','sqls','mqls','leads'].forEach(function(k){ M['req.'+r.id+'.'+k]='—'; }); });
+  M['fun.tot.opps']=fmtNum(ft.opps,1); M['fun.tot.wins']=fmtNum(ft.wins,1); M['fun.tot.gross']=fmtMoney(ft.gross); M['fun.tot.weighted']=fmtMoney(ft.weighted); M['fun.tot.inYear']=fmtMoney(ft.inYear);
+
+  /* fqhc / ts / wb */
+  var q = R.fq; $('fqhc-kpis').innerHTML = kp([['Accounts targeted',fmtInt(q.targeted)],['Reached / engaged',fmtInt(q.reached)+' / '+fmtInt(q.engaged)],['MQLs → SQLs → Opps',fmtNum(q.mqls,1)+' → '+fmtNum(q.sql,1)+' → '+fmtNum(q.opps,1)],['Gross pipeline',fmtMoney(q.gross)],['Expected wins',fmtNum(q.wins,1)],['Expected bookings',fmtMoney(q.weighted)],['In-year 2026 revenue',fmtMoney(q.inYear),'acc'],['Confidence-weighted',fmtMoney(q.inYear*pct(S.fqhc.conf)),'teal']]);
+  var ts = R.ts; $('ts-kpis').innerHTML = kp([['Leads',fmtInt(ts.leads)],['MQLs → SQLs → Opps',fmtNum(ts.mqls,1)+' → '+fmtNum(ts.sql,1)+' → '+fmtNum(ts.opps,1)],['Gross pipeline',fmtMoney(ts.gross)],['Expected wins',fmtNum(ts.wins,1)],['In-year 2026 revenue',fmtMoney(ts.inYear),'acc'],['Total event spend',fmtMoney(ts.spend)],['Cost per opportunity',ts.costPerOpp===null?'—':fmtMoney(ts.costPerOpp)],['Revenue / pipeline per event',fmtMoney(ts.revPerEvent)+' / '+fmtMoney(ts.pipePerEvent)]]);
+  var wb = R.wb; $('wb-kpis').innerHTML = kp([['Registrations / attendees',fmtInt(wb.reg)+' / '+fmtInt(wb.att)],['MQLs → SQLs → Opps',fmtNum(wb.mqls,1)+' → '+fmtNum(wb.sql,1)+' → '+fmtNum(wb.opps,1)],['Gross pipeline',fmtMoney(wb.gross)],['Expected wins',fmtNum(wb.wins,1)],['In-year 2026 revenue',fmtMoney(wb.inYear),'acc'],['Total webinar spend',fmtMoney(wb.spend)],['Cost per opportunity',wb.costPerOpp===null?'—':fmtMoney(wb.costPerOpp)],['Revenue per $ spend',wb.revPerDollar===null?'—':fmtNum(wb.revPerDollar,2)+'×']]);
+  /* channel comparison */
+  var ch = { tradeshow:{ spend:ts.spend, mqls:ts.mqls, sqls:ts.sql, opps:ts.opps, gross:ts.gross, rev:ts.inYear, conf:S.tradeshow.conf },
+             webinar:{ spend:wb.spend, mqls:wb.mqls, sqls:wb.sql, opps:wb.opps, gross:wb.gross, rev:wb.inYear, conf:S.webinar.conf },
+             ae:{ spend:null, mqls:null, sqls:null, opps:R.ae.totalOpps, gross:R.ae.gross, rev:R.ae.inYear, conf:Math.round((S.conf.aeHiring+S.conf.aeProd)/2) },
+             levers:{ spend:null, mqls:null, sqls:null, opps:null, gross:null, rev:R.lv.total, conf:S.conf.levers } };
+  Object.keys(ch).forEach(function(k){ var c = ch[k]; M['ch.'+k+'.spend']=c.spend===null?'—':fmtMoney(c.spend); M['ch.'+k+'.mqls']=c.mqls===null?'—':fmtNum(c.mqls,1); M['ch.'+k+'.sqls']=c.sqls===null?'—':fmtNum(c.sqls,1); M['ch.'+k+'.opps']=c.opps===null?'—':fmtNum(c.opps,1); M['ch.'+k+'.gross']=c.gross===null?'—':fmtMoney(c.gross); M['ch.'+k+'.rev']=fmtMoney(c.rev); M['ch.'+k+'.cpo']=c.spend&&c.opps?fmtMoney(c.spend/c.opps):'—'; M['ch.'+k+'.ppd']=c.spend&&c.gross?fmtNum(c.gross/c.spend,2)+'×':'—'; M['ch.'+k+'.rpd']=c.spend?fmtNum(c.rev/c.spend,2)+'×':'—'; M['ch.'+k+'.conf']=c.conf+'%'; });
+
+  /* new programs / platform */
+  R.np.rows.forEach(function(r){ M['np.'+r.id+'.grossOpp']=fmtMoney(r.grossOpp); M['np.'+r.id+'.customers']=fmtNum(r.customers,1); M['np.'+r.id+'.members']=fmtInt(r.members); M['np.'+r.id+'.bookings']=fmtMoney(r.bookings); M['np.'+r.id+'.rev']=fmtMoney(r.rev); M['np.'+r.id+'.weighted']=fmtMoney(r.weighted); });
+  M['np.tot.rev']=fmtMoney(R.np.total); M['np.tot.weighted']=fmtMoney(R.np.weighted);
+  R.pl.rows.forEach(function(r){ M['pl.'+r.id+'.accounts']=fmtNum(r.accounts,1); M['pl.'+r.id+'.bookings']=fmtMoney(r.bookings); M['pl.'+r.id+'.rev']=fmtMoney(r.rev); M['pl.'+r.id+'.weighted']=fmtMoney(r.weighted); });
+  M['pl.tot.rev']=fmtMoney(R.pl.total); M['pl.tot.weighted']=fmtMoney(R.pl.weighted);
+  R.lv.rows.forEach(function(r){ M['lv.'+r.id+'.rev']=fmtMoney(r.rev); M['lv.'+r.id+'.weighted']=fmtMoney(r.weighted); });
+
+  /* AE */
+  var ae = R.ae; $('ae-kpis').innerHTML = kp([['Nominal headcount (avg FTE)',fmtNum(ae.headFTE,2)],['Effective productive capacity (FTE)',fmtNum(ae.effFTE,2),'acc'],['Capacity lost to ramp + attrition',fmtNum(ae.headFTE-ae.effFTE,2)+' FTE'],['Opportunities generated',fmtNum(ae.totalOpps,1)],['Gross pipeline generated',fmtMoney(ae.gross)],['Expected wins / bookings',fmtNum(ae.wins,1)+' / '+fmtMoney(ae.bookings)],['In-year 2026 revenue',fmtMoney(ae.inYear),'acc'],['Cycle + implementation lag',ae.lag+' months','amber']]);
+  aeChart($('ch-ae'), ae);
+  /* SAM / installed */
+  var sm = R.sam; $('sam-kpis').innerHTML = sm.enabled ? kp([['Accounts covered',fmtInt(sm.covered)],['Expansion opportunities',fmtNum(sm.opps,1)],['Expansion pipeline',fmtMoney(sm.pipe)],['Expected wins',fmtNum(sm.wins,1)],['In-year 2026 revenue',fmtMoney(sm.inYear),'acc'],['Confidence-weighted',fmtMoney(sm.inYear*pct(S.conf.sam)),'teal'],['First revenue month',sm.goLive<=11?MONTHS[sm.goLive]:'Out of year','amber']]) : '<div class="note">SAM model disabled.</div>';
+  var ib = R.inst; $('inst-kpis').innerHTML = ib.enabled ? kp([['Expansion-eligible accounts',fmtInt(ib.eligible)],['Removed (covered by SAMs)',fmtInt(ib.overlap),'amber'],['Net addressable',fmtInt(ib.net)],['Expansion opportunities',fmtNum(ib.opps,1)],['Expected wins',fmtNum(ib.wins,1)],['In-year 2026 revenue',fmtMoney(ib.inYear),'acc'],['Confidence-weighted',fmtMoney(ib.inYear*pct(S.conf.installed)),'teal']]) : '<div class="note">Installed-base model disabled.</div>';
+
+  /* confidence table */
+  var cft = { gross:0, weighted:0 };
+  R.sources.forEach(function(s){ M['cf.'+s.key+'.label']=s.label; M['cf.'+s.key+'.conf']=s.conf+'%'; M['cf.'+s.key+'.cert']=s.cert; M['cf.'+s.key+'.gross']=fmtMoney(s.gross); M['cf.'+s.key+'.weighted']=fmtMoney(s.weighted); M['cf.'+s.key+'.hair']={ t:'-'+fmtMoney(s.gross-s.weighted), neg:s.gross-s.weighted>0 }; cft.gross+=s.gross; cft.weighted+=s.weighted; });
+  M['cf.tot.gross']=fmtMoney(cft.gross); M['cf.tot.weighted']=fmtMoney(cft.weighted); M['cf.tot.hair']='-'+fmtMoney(cft.gross-cft.weighted);
+
+  /* scenario compare */
+  ['conservative','base','upside','custom'].forEach(function(n){ var st2 = n===S.scenario ? S : (n==='custom' ? (customStash||S) : scenarioState(n)); st2 = clone(st2); st2.toggles = S.toggles; st2.timing = S.timing; st2.target = S.target;
+    var r = compute(st2), mk = r.sources.filter(function(s){ return ['funnels','tradeshow','webinar'].indexOf(s.key)>-1; }).reduce(function(a,s){ return a+s.gross; },0);
+    var ex = r.sources.filter(function(s){ return ['sam','installed'].indexOf(s.key)>-1; }).reduce(function(a,s){ return a+s.gross; },0);
+    var vals = [fmtMoney(r.projected), fmtMoney(r.weighted), fmtMoney(r.gap), (r.growth>=0?'+':'')+fmtPct(r.growth), fmtPct(r.coverage), fmtPct(r.wCoverage), fmtMoney((r.target-r.dep.existing)*2.5), fmtNum(r.fun.wins+r.seg.pipeline.reduce(function(a,p){return a+p.wins;},0)+r.ae.wins,1), fmtNum(r.ae.effFTE,2), fmtMoney(mk), fmtMoney(ex), fmtMoney(r.dep.product), fmtMoney(r.dep.member), fmtPct(r.q4Share,0)];
+    vals.forEach(function(v,i){ M['cmp.'+n+'.'+i]=v; }); });
+  renderDiff();
+
+  /* sensitivity */
+  var sens = calcSensitivity(S), mxd = Math.max.apply(null, sens.tests.map(function(t){ return Math.abs(t.delta); }).concat([1]));
+  $('sens').innerHTML = sens.tests.map(function(t){ return '<div class="sens"><div>'+t.label+'</div><div><div class="b" style="width:'+Math.max(2,100*Math.abs(t.delta)/mxd)+'%;background:'+(t.delta>=0?'var(--ai)':'var(--no)')+'"></div></div><div class="d '+(t.delta>=0?'pos':'neg')+'">'+fmtSigned(t.delta)+'</div></div>'; }).join('');
+
+  /* gap closure */
+  var gc = calcGapClosure(S, R);
+  $('gap-kpis').innerHTML = kp([['Remaining gap to target',fmtMoney(gc.gap),'amber'],['Gap on confidence-weighted basis',fmtMoney(Math.max(0,R.wGap)),'amber'],['Target',fmtMoney(t)],['Projected',fmtMoney(R.projected),'acc']]);
+  $('gap-items').innerHTML = gc.gap>0 ? gc.items.map(function(it){ return '<div class="qrow"><div><div class="q">'+it.q+'</div><div class="qn">'+it.note+'</div></div><div class="v">'+(it.money?fmtMoney(it.v):fmtInt(it.v))+'</div></div>'; }).join('') : '<div class="note">Projected revenue meets or exceeds the target at current assumptions. Reduce assumptions or raise the target to test gap closure.</div>';
+
+  /* time-phased */
+  $('period-chips').innerHTML = [['monthly','Monthly'],['quarterly','Quarterly'],['annual','Annual']].map(function(p){ return '<button data-period="'+p[0]+'" class="'+(S.period===p[0]?'on':'')+'">'+p[1]+'</button>'; }).join('');
+  var labels, vals, wvals;
+  if (S.period==='monthly'){ labels = MONTHS; vals = R.monthly; wvals = R.wMonthly; }
+  else if (S.period==='quarterly'){ labels = ['Q1','Q2','Q3','Q4']; vals = R.quarterly; wvals = R.wQuarterly; }
+  else { labels = ['2026']; vals = [R.projected]; wvals = [R.weighted]; }
+  columns($('ch-period'), labels, [{ name:'Projected', vals:vals, c:'#111B33' },{ name:'Confidence-weighted', vals:wvals, c:'#12856A' }]);
+  $('ch-period').innerHTML += '<div class="legend"><span style="--c:#111B33">Projected</span><span style="--c:#12856A">Confidence-weighted</span></div>';
+  columns($('ch-cum'), MONTHS, [{ name:'Cumulative projected', vals:R.cum, c:'#111B33', line:true },{ name:'Cumulative confidence-weighted', vals:R.wcum, c:'#12856A', line:true, dash:'4 3' },{ name:'Cumulative target', vals:R.tcum, c:'#A63D22', line:true, dash:'6 4' }]);
+  $('ch-cum').innerHTML += '<div class="legend"><span style="--c:#111B33">Cumulative projected</span><span style="--c:#12856A">Cumulative confidence-weighted</span><span style="--c:#A63D22">Cumulative target (linear)</span></div>';
+  var tr = calcTimingRisk(S); $('timing-list').innerHTML = tr.map(function(x){ return '<div class="sens"><div>'+x.label+'</div><div><div class="b" style="width:'+Math.max(2,100*Math.abs(x.delta)/Math.max(1,Math.max.apply(null,tr.map(function(z){return Math.abs(z.delta);}))))+'%;background:var(--no)"></div></div><div class="d neg">'+fmtSigned(x.delta)+'</div></div>'; }).join('');
+
+  /* composition */
+  function group(fn){ var g = {}; R.sources.forEach(function(s){ var k = fn(s); g[k] = (g[k]||0)+s.gross; }); return Object.keys(g).map(function(k){ return { l:k, v:g[k] }; }).sort(function(a,b){ return b.v-a.v; }); }
+  var palette = ['#111B33','#12856A','#2A5FA8','#8A6212','#5B4C8F','#A63D22','#8A94AB','#CFC7A8'];
+  function paint(items){ return items.map(function(it,i){ it.c = palette[i%palette.length]; return it; }); }
+  hbars($('ch-state'), paint(group(function(s){ return s.meta.state; })), R.projected);
+  hbars($('ch-motion'), paint(group(function(s){ return s.meta.motion; })), R.projected);
+  hbars($('ch-conf'), paint(group(function(s){ return s.cert; })), R.projected);
+  hbars($('ch-exnew'), paint(group(function(s){ return s.meta.isNew ? 'New in 2026' : 'Existing business'; })), R.projected);
+
+  /* risks */
+  $('risks').innerHTML = calcRisks(S, R).map(function(r){ return '<div class="risk"><span class="lv '+r.level+'">'+r.level+'</span><div class="tx">'+r.text+'</div></div>'; }).join('');
+
+  setCalc(M);
+}
+function kp(rows){ return rows.map(function(k){ return '<div class="kpi '+(k[2]||'')+'"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'; }).join(''); }
+
+var lcSel = null;
+function renderLifecycle(){
+  if (!S.programs.length){ $('lifecycle').innerHTML=''; $('lc-kpis').innerHTML=''; $('lc-chips').innerHTML=''; return; }
+  if (!lcSel || !S.programs.some(function(p){ return p.id===lcSel; })) lcSel = S.programs[0].id;
+  $('lc-chips').innerHTML = S.programs.map(function(p){ return '<button data-lc="'+p.id+'" class="'+(p.id===lcSel?'on':'')+'">'+esc(p.name)+'</button>'; }).join('');
+  var p = S.programs.filter(function(x){ return x.id===lcSel; })[0], r = R.mem.rows.filter(function(x){ return x.id===lcSel; })[0];
+  var stage = p.fileStatus==='Reconciled' ? 7 : p.fileStatus==='Received' ? 5 : 2;
+  var steps = ['Signed contract','Expected member population','Pending revenue','Program launch','Member file received','Actual member population','Revenue reconciliation','Recognized revenue'];
+  $('lifecycle').innerHTML = steps.map(function(s,i){ return '<div class="lc '+(i<stage?'done':i===stage?'on':'')+(i===2||i===6?' var':'')+'"><div class="n">'+('0'+(i+1)).slice(-2)+'</div><div class="t">'+s+'</div></div>'; }).join('');
+  var cur = r.hasFile ? r.reconciledRev : r.planRev;
+  $('lc-kpis').innerHTML = kp([['Expected revenue (at signature)',fmtMoney(r.expectedRev)],['Current expected revenue',fmtMoney(cur)+(r.hasFile?'':' · subject to reconciliation'),r.hasFile?'':'amber'],['Reconciled revenue',r.reconciledRev===null?'Awaiting member file':fmtMoney(r.reconciledRev),r.reconciledRev===null?'':'teal'],['Variance',r.trueUp===null?'—':fmtSigned(r.trueUp),r.trueUp>0?'teal':r.trueUp<0?'red':'']]);
+}
+
+/* ---------- render all ---------- */
+function renderAll(){
+  Object.keys(FIELDS).forEach(function(k){ renderFields('f-'+({ target:'target', weights:'weights', memvar:'memvar', fqhc:'fqhc', tradeshow:'tradeshow', webinar:'webinar', ae:'ae', ramp:'ramp', sam:'sam', installed:'installed', conf:'conf' }[k]), FIELDS[k]); });
+  renderTables(); renderOutputs(); syncInputs();
+}
+function syncInputs(){ document.querySelectorAll('[data-p]').forEach(function(el){ if (document.activeElement===el) return; var v = getP(S, el.getAttribute('data-p')); if (v===undefined) return; if (el.tagName==='SELECT'){ el.value = el.getAttribute('data-k')==='bool' ? (v!==false?'1':'0') : String(v); } else { var k = el.getAttribute('data-k'); el.value = k==='money' ? Math.round(v) : v; } }); }
+
+/* ---------- events ---------- */
+document.addEventListener('input', function(e){
+  var el = e.target; if (!el.hasAttribute('data-p')) return;
+  var k = el.getAttribute('data-k'), p = el.getAttribute('data-p'), v;
+  if (k==='sel') v = el.value; else if (k==='text') v = el.value; else if (k==='bool') v = el.value==='1'; else v = parse(k, el.value);
+  if (/^(sam|installed)\.enabled$/.test(p)) v = el.value==='1';
+  setP(S, p, v); markCustom();
+  document.querySelectorAll('[data-p="'+p+'"]').forEach(function(o){ if (o!==el){ if (o.tagName==='SELECT') o.value = k==='bool'?(v?'1':'0'):String(v); else o.value = k==='money'?Math.round(v):v; } });
+  if (/\.name$/.test(p) && /^segments\./.test(p)) renderTables();
+  renderOutputs(); autosave();
+});
+document.addEventListener('change', function(e){
+  var el = e.target;
+  if (el.hasAttribute('data-toggle')){ S.toggles[el.getAttribute('data-toggle')] = el.checked; renderOutputs(); autosave(); }
+  if (el.hasAttribute('data-timing')){ S.timing[el.getAttribute('data-timing')] = el.checked ? 1 : 0; renderOutputs(); autosave(); }
+  if (el.id==='reg-src') renderRegister();
+});
+document.addEventListener('click', function(e){
+  var t = e.target.closest('button'); if (!t) return;
+  if (t.hasAttribute('data-add')){ var arr = t.getAttribute('data-add'), tpl = clone(DEFAULTS[arr][0]); tpl.id = uid(arr.charAt(0)); tpl.name = (tpl.name||'New').replace(/\d+$|[A-Z]$/,'')+' '+(S[arr].length+1); if (arr==='segments') tpl.name = 'User-defined segment'; S[arr].push(tpl); markCustom(); renderTables(); renderOutputs(); syncInputs(); autosave(); return; }
+  if (t.hasAttribute('data-del')){ var a2 = t.getAttribute('data-del'), id = t.getAttribute('data-id'); if (S[a2].length<=1 && a2!=='levers'){ flash('Keep at least one row'); return; } S[a2] = S[a2].filter(function(r){ return r.id!==id; }); markCustom(); renderTables(); renderOutputs(); syncInputs(); autosave(); return; }
+  if (t.hasAttribute('data-dup')){ var a3 = t.getAttribute('data-dup'), id3 = t.getAttribute('data-id'), src2 = S[a3].filter(function(r){ return r.id===id3; })[0]; if (!src2) return; var cp = clone(src2); cp.id = uid(a3.charAt(0)); cp.name = (cp.name||'')+' (copy)'; S[a3].splice(S[a3].indexOf(src2)+1, 0, cp); markCustom(); renderTables(); renderOutputs(); syncInputs(); autosave(); return; }
+  if (t.hasAttribute('data-reset')){ var k = t.getAttribute('data-reset'), base = scenarioState(S.scenario==='custom'?'base':S.scenario); S[k] = clone(base[k]); if (k==='ae'||k==='sam'||k==='installed') { } markCustom(); renderAll(); autosave(); return; }
+  if (t.hasAttribute('data-mv')){ S.memberVar.active = t.getAttribute('data-mv'); markCustom(); renderOutputs(); autosave(); return; }
+  if (t.hasAttribute('data-lc')){ lcSel = t.getAttribute('data-lc'); renderLifecycle(); return; }
+  if (t.hasAttribute('data-period')){ S.period = t.getAttribute('data-period'); renderOutputs(); return; }
+  if (t.hasAttribute('data-v')){ S.view = t.getAttribute('data-v'); document.body.classList.toggle('board', S.view==='board'); document.querySelectorAll('#viewseg button').forEach(function(b){ b.classList.toggle('on', b===t); }); return; }
+  if (t.hasAttribute('data-s')){ setScenario(t.getAttribute('data-s'), true); autosave(); return; }
+  if (t.hasAttribute('data-guide')){ openGuide(t.getAttribute('data-guide')); return; }
+  if (t.hasAttribute('data-gidx')){ var gk = t.getAttribute('data-gidx'), sid = secOf(gk); if (sid){ var se = document.getElementById(sid); if (se) window.scrollTo({ top: se.getBoundingClientRect().top + window.scrollY - 150, behavior:'smooth' }); } openGuide(gk); return; }
+  if (t.id==='btn-guide' || t.id==='gm-index'){ openIndex(); return; }
+  if (t.id==='gm-close'){ closeGuide(); return; }
+  if (t.id==='gm-prev'){ var pi = GUIDE_KEYS.indexOf(gCur); if (pi>0) openGuide(GUIDE_KEYS[pi-1]); return; }
+  if (t.id==='gm-next'){ var ni = GUIDE_KEYS.indexOf(gCur); if (ni>-1 && ni<GUIDE_KEYS.length-1) openGuide(GUIDE_KEYS[ni+1]); return; }
+  if (t.hasAttribute('data-nav')){ var sec = document.getElementById(t.getAttribute('data-nav')); if (sec) window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - 150, behavior:'smooth' }); return; }
+  if (t.id==='btn-save'){ save(); return; }
+  if (t.id==='btn-reset'){ if (confirm('Reset every assumption to the default case study?')){ try{ localStorage.removeItem(KEY); }catch(e){} customStash = null; S = clone(DEFAULTS); setScenario('base'); flash('Reset'); } return; }
+  if (t.id==='btn-reset-scen'){ var n = S.scenario==='custom'?'base':S.scenario; customStash = null; setScenario(n, true); flash('Scenario reset'); return; }
+  if (t.id==='btn-clear-saved'){ try{ localStorage.removeItem(KEY); }catch(e){} customStash = null; flash('Saved custom cleared'); return; }
+  if (t.id==='btn-export'){ var blob = new Blob([JSON.stringify(S,null,2)],{ type:'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'revenue-model-assumptions.json'; a.click(); return; }
+  if (t.id==='btn-import'){ $('file-import').click(); return; }
+  if (t.id==='btn-print'){ window.print(); return; }
+});
+$('file-import').addEventListener('change', function(){ var f = this.files[0]; if (!f) return; var rd = new FileReader(); rd.onload = function(){ try { var o = JSON.parse(rd.result); if (!o.segments) throw 0; S = o; S.scenario = 'custom'; customStash = clone(S); if (!S.toggles) S.toggles = clone(DEFAULTS.toggles); if (!S.timing) S.timing = clone(DEFAULTS.timing); setScenario('custom', true); flash('Imported'); } catch(e){ flash('Invalid file'); } }; rd.readAsText(f); this.value=''; });
+$('reg-q').addEventListener('input', renderRegister);
+
+/* ---------- guide ---------- */
+var GUIDE_KEYS = Object.keys(GUIDE).sort(), gCur = null;
+document.querySelectorAll('.sec-h').forEach(function(h){ var no = h.querySelector('.no'); if (!no || !GUIDE[no.textContent.trim()]) return; var b = document.createElement('button'); b.className = 'gd'; b.setAttribute('data-guide', no.textContent.trim()); b.textContent = 'What is this?'; h.insertBefore(b, h.querySelector('.meta')); });
+var secFor = { '27':'s-score','34':'s-score','35':'s-score','38':'s-ba','11':'s-funnels','14':'s-marketing','15':'s-marketing','17':'s-product','20':'s-expansion','22':'s-confidence','24':'s-scenarios','29':'s-time' };
+function secOf(k){ if (secFor[k]) return secFor[k]; var el = Array.prototype.filter.call(document.querySelectorAll('.sec-h .no'), function(n){ return n.textContent.trim()===k; })[0]; return el ? el.closest('section').id : null; }
+function openGuide(k){
+  var g = GUIDE[k]; if (!g) return; gCur = k;
+  $('gm-k').textContent = 'Section ' + k + ' of 38';
+  $('gm-title').textContent = g.t;
+  $('gm-body').innerHTML = '<h4>What it is</h4><p>'+g.w+'</p><h4>Why it matters</h4><p>'+g.y+'</p><h4>How to use it</h4><p>'+g.h+'</p>';
+  var i = GUIDE_KEYS.indexOf(k); $('gm-prev').disabled = i<=0; $('gm-next').disabled = i>=GUIDE_KEYS.length-1;
+  $('guide-modal').hidden = false; $('gm-close').focus();
+}
+function openIndex(){
+  gCur = null; $('gm-k').textContent = 'Guide'; $('gm-title').textContent = 'What each part of the model does';
+  $('gm-body').innerHTML = '<p style="margin-bottom:12px">Every numbered component has a plain-English explanation. Click one to read it; the page scrolls to that section.</p><ul class="gindex">' + GUIDE_KEYS.map(function(k){ return '<li><button data-gidx="'+k+'"><span>'+k+'</span>'+GUIDE[k].t+'</button></li>'; }).join('') + '</ul>';
+  $('gm-prev').disabled = true; $('gm-next').disabled = true; $('guide-modal').hidden = false;
+}
+function closeGuide(){ $('guide-modal').hidden = true; }
+document.addEventListener('keydown', function(e){ if (e.key==='Escape') closeGuide(); });
+$('guide-modal').addEventListener('click', function(e){ if (e.target === $('guide-modal')) closeGuide(); });
+
+/* ---------- subnav ---------- */
+var NAV = [['s-intro','Situation'],['s-score','Scorecard'],['s-support','Plan support'],['s-bridge','Bridge'],['s-segments','Segments'],['s-member','Member programs'],['s-lifecycle','Lifecycle'],['s-funnels','Funnels'],['s-fqhc','FQHC'],['s-marketing','Marketing'],['s-product','Product'],['s-capacity','Capacity'],['s-expansion','Expansion'],['s-confidence','Confidence'],['s-scenarios','Scenarios'],['s-sensitivity','Sensitivity'],['s-gap','Gap closure'],['s-time','Timing'],['s-composition','Composition'],['s-risks','Risks'],['s-register','Register'],['s-arch','Architecture']];
+$('subnav').innerHTML = NAV.map(function(n){ return '<button data-nav="'+n[0]+'">'+n[1]+'</button>'; }).join('');
+window.addEventListener('scroll', function(){ var y = window.scrollY+170, cur = 0; NAV.forEach(function(n,i){ var el = $(n[0]); if (el && el.offsetTop <= y) cur = i; }); document.querySelectorAll('#subnav button').forEach(function(b,i){ b.classList.toggle('on', i===cur); }); }, { passive:true });
+
+/* ---------- init ---------- */
+var loaded = load();
+document.querySelectorAll('#scenseg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-s')===S.scenario); });
+$('scen-name').textContent = S.scenario.charAt(0).toUpperCase()+S.scenario.slice(1);
+document.body.classList.toggle('board', S.view==='board');
+document.querySelectorAll('#viewseg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===S.view); });
+renderAll();
+if (loaded) flash('Restored saved assumptions');
+})();
+</script>
+</body></html>
